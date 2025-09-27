@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user.get_full_name|default:user.username }}'s Profile{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Profile Header -->
+        <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+            <div class="px-6 py-8">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        {% if user.userprofileextension.profile_picture %}
+                            <img class="h-24 w-24 rounded-full object-cover border-4 border-blue-100"
+                                 src="{{ user.userprofileextension.profile_picture.url }}"
+                                 alt="{{ user.get_full_name|default:user.username }}">
+                        {% else %}
+                            <div class="h-24 w-24 rounded-full bg-blue-500 flex items-center justify-center border-4 border-blue-100">
+                                <span class="text-2xl font-bold text-white">
+                                    {{ user.get_full_name|default:user.username|first|upper }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="ml-6 flex-1">
+                        <h1 class="text-3xl font-bold text-gray-900">
+                            {{ user.get_full_name|default:user.username }}
+                            {% if request.user.is_staff and request.user != user %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
+                                    <i class="fas fa-shield-alt mr-1"></i>Admin View
+                                </span>
+                            {% endif %}
+                        </h1>
+                        {% if user.userprofileextension.job_title %}
+                            <p class="text-lg text-gray-600">{{ user.userprofileextension.job_title }}</p>
+                        {% endif %}
+                        {% if user.userprofileextension.location %}
+                            <p class="text-sm text-gray-500 flex items-center mt-1">
+                                <i class="fas fa-map-marker-alt mr-1"></i>{{ user.userprofileextension.location }}
+                            </p>
+                        {% endif %}
+                        <div class="flex items-center mt-2">
+                            {% if user.is_investor %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-coins mr-1"></i>Investor
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <i class="fas fa-lightbulb mr-1"></i>Entrepreneur
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if request.user == user %}
+                        <div class="flex-shrink-0">
+                            <a href="{% url 'accounts:profile_edit' %}"
+                               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <i class="fas fa-edit mr-2"></i>Edit Profile
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Content -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- About Section -->
+                {% if user.profile_description %}
+                    <div class="bg-white shadow rounded-lg p-6">
+                        <h2 class="text-lg font-medium text-gray-900 mb-4">About</h2>
+                        <p class="text-gray-700 whitespace-pre-line">{{ user.profile_description }}</p>
+                    </div>
+                {% endif %}
+
+                <!-- Business Information - Always visible -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">
+                        {% if user.is_investor %}
+                            Investment Information
+                        {% else %}
+                            Business Information
+                        {% endif %}
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Industry - Always show -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500">Industry</label>
+                            <p class="mt-1 text-gray-900">
+                                {% if user.userprofileextension.industry %}
+                                    {{ user.userprofileextension.get_industry_display }}
+                                {% else %}
+                                    <span class="text-gray-400 italic">Not specified</span>
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <!-- Experience Level - Always show -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500">Experience Level</label>
+                            <p class="mt-1 text-gray-900">
+                                {% if user.userprofileextension.experience_level %}
+                                    {{ user.userprofileextension.get_experience_level_display }}
+                                {% else %}
+                                    <span class="text-gray-400 italic">Not specified</span>
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        {% if user.is_investor %}
+                            <!-- Investment Range - Always show for investors -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500">Investment Range</label>
+                                <p class="mt-1 text-gray-900">
+                                    {% if user.userprofileextension.investment_range %}
+                                        {{ user.userprofileextension.get_investment_range_display }}
+                                    {% else %}
+                                        <span class="text-gray-400 italic">Not specified</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <!-- Investment Focus - Always show for investors -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500">Investment Focus</label>
+                                <p class="mt-1 text-gray-900">
+                                    {% if user.userprofileextension.investment_focus %}
+                                        {{ user.userprofileextension.get_investment_focus_display }}
+                                    {% else %}
+                                        <span class="text-gray-400 italic">Not specified</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <!-- Company name only visible to admins for investors -->
+                            {% if user.company_name and request.user.is_staff %}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500">Company</label>
+                                    <p class="mt-1 text-gray-900">
+                                        {{ user.company_name }}
+                                        <span class="text-xs text-red-600 ml-1">(Admin Only)</span>
+                                    </p>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <!-- Business Stage - Always show for entrepreneurs -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500">Business Stage</label>
+                                <p class="mt-1 text-gray-900">
+                                    {% if user.userprofileextension.business_stage %}
+                                        {{ user.userprofileextension.get_business_stage_display }}
+                                    {% else %}
+                                        <span class="text-gray-400 italic">Not specified</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <!-- Funding Goal - Always show for entrepreneurs -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500">Funding Goal</label>
+                                <p class="mt-1 text-gray-900">
+                                    {% if user.userprofileextension.funding_goal %}
+                                        ${{ user.userprofileextension.funding_goal|floatformat:0 }}
+                                    {% else %}
+                                        <span class="text-gray-400 italic">Not specified</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Show completion prompt for profile owner -->
+                    {% if request.user == user %}
+                        {% if not user.userprofileextension.industry or not user.userprofileextension.experience_level %}
+                            <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                                <p class="text-sm text-yellow-800">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                                    Complete your professional information to improve your profile visibility.
+                                    <a href="{% url 'accounts:profile_edit' %}" class="font-medium hover:underline ml-1">Edit Profile</a>
+                                </p>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <!-- Contact Information Section with Privacy Rules -->
+                {% if user.email or user.phone_number %}
+                    {% if request.user.is_staff or request.user.is_investor and not user.is_investor or request.user == user %}
+                        <div class="bg-white shadow rounded-lg p-6">
+                            <h2 class="text-lg font-medium text-gray-900 mb-4">Contact Information</h2>
+
+                            {% if request.user != user %}
+                                <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                    <p class="text-sm text-blue-800">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        {% if request.user.is_staff %}
+                                            You can see this contact information because you are an administrator.
+                                        {% elif request.user.is_investor and not user.is_investor %}
+                                            This entrepreneur has automatically shared their contact information with investors.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            {% endif %}
+
+                            <div class="space-y-3">
+                                {% if user.email %}
+                                    <div class="flex items-center">
+                                        <i class="fas fa-envelope text-gray-400 mr-3"></i>
+                                        <span class="text-gray-900">{{ user.email }}</span>
+                                        {% if request.user == user %}
+                                            {% if user.is_investor %}
+                                                <span class="ml-2 text-xs text-gray-500">(Admin Only)</span>
+                                            {% else %}
+                                                <span class="ml-2 text-xs text-gray-500">(Visible to Investors & Admins)</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                                {% if user.phone_number %}
+                                    <div class="flex items-center">
+                                        <i class="fas fa-phone text-gray-400 mr-3"></i>
+                                        <span class="text-gray-900">{{ user.phone_number }}</span>
+                                        {% if request.user == user %}
+                                            {% if user.is_investor %}
+                                                <span class="ml-2 text-xs text-gray-500">(Admin Only)</span>
+                                            {% else %}
+                                                <span class="ml-2 text-xs text-gray-500">(Visible to Investors & Admins)</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% elif request.user.is_authenticated %}
+                        <div class="bg-white shadow rounded-lg p-6">
+                            <h2 class="text-lg font-medium text-gray-900 mb-4">Contact Information</h2>
+                            <div class="p-4 bg-gray-50 border border-gray-200 rounded-md">
+                                <p class="text-sm text-gray-600">
+                                    <i class="fas fa-lock mr-2"></i>
+                                    Contact information is private.
+                                    {% if not request.user.is_investor and user.is_investor %}
+                                        Connect through the platform messaging system to communicate.
+                                    {% elif request.user.is_investor and user.is_investor %}
+                                        Investor contact details are kept private.
+                                    {% else %}
+                                        Use the platform messaging system to connect.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Profile Stats (only for own profile) -->
+                {% if request.user == user %}
+                    <div class="bg-white shadow rounded-lg p-6">
+                        <h2 class="text-lg font-medium text-gray-900 mb-4">Profile Overview</h2>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Profile Completion</span>
+                                <span class="text-sm font-medium text-green-600">85%</span>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Account Status</span>
+                                {% if user.subscription_paid %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-check-circle mr-1"></i>Active
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        <i class="fas fa-exclamation-circle mr-1"></i>Inactive
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Member Since</span>
+                                <span class="text-sm text-gray-900">{{ user.created_at|date:"M Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Contact Actions for other users -->
+                {% if request.user != user and request.user.is_authenticated %}
+                    <div class="bg-white shadow rounded-lg p-6">
+                        <h2 class="text-lg font-medium text-gray-900 mb-4">Connect</h2>
+                        <div class="space-y-3">
+                            {% if request.user.is_investor and not user.is_investor %}
+                                <p class="text-sm text-gray-600 mb-3">
+                                    Interested in this entrepreneur? Start a conversation to learn more about their business.
+                                </p>
+                                <a href="{% url 'chat:chat_list' %}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <i class="fas fa-comments mr-2"></i>Start Conversation
+                                </a>
+                            {% elif not request.user.is_investor and user.is_investor %}
+                                <p class="text-sm text-gray-600 mb-3">
+                                    Connect with this investor through the platform messaging system.
+                                </p>
+                                <a href="{% url 'chat:chat_list' %}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    <i class="fas fa-comments mr-2"></i>Send Message
+                                </a>
+                            {% else %}
+                                <p class="text-sm text-gray-600 mb-3">
+                                    Use the platform messaging system to connect with other users.
+                                </p>
+                                <a href="{% url 'chat:chat_list' %}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <i class="fas fa-comments mr-2"></i>Message
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

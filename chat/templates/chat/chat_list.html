@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}My Chats - InvestorConnect{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8 px-4">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">My Conversations</h1>
+        <p class="text-gray-600 mt-2">
+            {% if user.user_type == 'investor' %}
+                Your conversations with entrepreneurs
+            {% else %}
+                Your conversations with investors
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Chat List -->
+    {% if chat_data %}
+        <div class="bg-white rounded-lg shadow">
+            {% for chat in chat_data %}
+            <div class="border-b border-gray-200 last:border-b-0">
+                <a href="{% url 'chat:chat_room' chat.room.id %}"
+                   class="block p-4 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <!-- User Info -->
+                            <div class="flex items-center space-x-3">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                                        <span class="text-white font-medium">
+                                            {{ chat.other_user.username|first|upper }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center space-x-2">
+                                        <h3 class="text-lg font-medium text-gray-900 truncate">
+                                            {{ chat.other_user.username }}
+                                        </h3>
+                                        {% if chat.unread_count > 0 %}
+                                            <span class="bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                                                {{ chat.unread_count }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Related Pitch -->
+                                    {% if chat.room.related_pitch %}
+                                    <p class="text-sm text-gray-500 truncate">
+                                        About: {{ chat.room.related_pitch.title }}
+                                    </p>
+                                    {% endif %}
+
+                                    <!-- Message Count -->
+                                    {% if chat.total_messages > 0 %}
+                                    <p class="text-xs text-gray-400">
+                                        {{ chat.total_messages }} message{{ chat.total_messages|pluralize }}
+                                    </p>
+                                    {% endif %}
+
+                                    <!-- Last Message -->
+                                    {% if chat.last_message %}
+                                    <p class="text-sm text-gray-600 truncate mt-1">
+                                        {% if chat.last_message.sender == user %}
+                                            You: {{ chat.last_message.message }}
+                                        {% else %}
+                                            {{ chat.last_message.message }}
+                                        {% endif %}
+                                    </p>
+                                    {% else %}
+                                    <p class="text-sm text-gray-400 italic">No messages yet</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Timestamp and Arrow -->
+                        <div class="flex flex-col items-end space-y-1">
+                            {% if chat.last_message %}
+                            <span class="text-xs text-gray-500">
+                                {{ chat.last_message.timestamp|date:"M d, H:i" }}
+                            </span>
+                            {% endif %}
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Summary -->
+        <div class="mt-6 text-center">
+            <p class="text-gray-600">
+                {{ total_chats }} conversation{{ total_chats|pluralize }} total
+            </p>
+        </div>
+    {% else %}
+        <!-- No Chats -->
+        <div class="bg-white rounded-lg shadow p-8 text-center">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.436L3 21l2.436-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No conversations yet</h3>
+            {% if user.user_type == 'investor' %}
+                <p class="text-gray-600 mb-4">
+                    Start conversations by expressing interest in pitches that interest you.
+                </p>
+                <a href="{% url 'pitches:investor_pitch_list' %}"
+                   class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    Browse Pitches
+                </a>
+            {% else %}
+                <p class="text-gray-600 mb-4">
+                    Conversations will appear here when investors express interest in your pitches.
+                </p>
+                <a href="{% url 'accounts:dashboard' %}"
+                   class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                    </svg>
+                    Go to Dashboard
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

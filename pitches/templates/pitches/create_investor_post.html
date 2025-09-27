@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Post - InvestorConnect{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto mt-8 px-4">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h1 class="text-2xl font-bold text-gray-900">Share Your Insights</h1>
+            <p class="text-gray-600 mt-2">Create a post to share knowledge with the entrepreneur community</p>
+        </div>
+
+        <div class="p-6">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="space-y-6">
+                    <!-- Post Type -->
+                    <div>
+                        <label for="{{ form.post_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Post Type
+                        </label>
+                        {{ form.post_type }}
+                        {% if form.post_type.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.post_type.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Title -->
+                    <div>
+                        <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Title *
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.title.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Featured Image -->
+                    <div>
+                        <label for="{{ form.featured_image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Featured Image (Optional)
+                        </label>
+                        {{ form.featured_image }}
+                        <p class="text-sm text-gray-500 mt-1">Upload an image to make your post more engaging</p>
+                        {% if form.featured_image.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.featured_image.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Content -->
+                    <div>
+                        <label for="{{ form.content.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Content *
+                        </label>
+                        {{ form.content }}
+                        <p class="text-sm text-gray-500 mt-1">Share your insights, experiences, or advice for entrepreneurs</p>
+                        {% if form.content.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.content.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tags -->
+                    <div>
+                        <label for="{{ form.tags.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Tags (Optional)
+                        </label>
+                        {{ form.tags }}
+                        <p class="text-sm text-gray-500 mt-1">Add relevant tags separated by commas (e.g., fintech, startup, funding)</p>
+                        {% if form.tags.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.tags.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="flex space-x-4 pt-6 border-t border-gray-200">
+                        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                            Publish Post
+                        </button>
+                        <a href="{% url 'pitches:investor_posts_feed' %}"
+                           class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

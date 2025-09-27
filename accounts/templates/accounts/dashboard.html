@@ -1,0 +1,1260 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - InvestorConnect{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Welcome Header -->
+    <div class="mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div class="mb-4 lg:mb-0">
+                <h1 class="text-3xl font-bold text-gray-900">
+                    Welcome back, {{ user.username }}!
+                </h1>
+                <p class="text-gray-600 mt-2">
+                    {% if user.is_staff %}
+                        Administrator dashboard - manage platform and assist users
+                    {% elif user.is_investor %}
+                        Your investor dashboard - discover and connect with entrepreneurs
+                    {% elif user.is_job_seeker %}
+                        Your job seeker dashboard - find opportunities and manage applications
+                    {% else %}
+                        Your entrepreneur dashboard - manage your pitches and connect with investors
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- Profile Completion Alert -->
+            {% if not user.is_staff and user.userprofileextension.profile_completion_percentage < 80 %}
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-sm">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                    <div>
+                        <p class="text-sm text-blue-800 font-medium">
+                            Profile {{ user.userprofileextension.profile_completion_percentage|default:0 }}% Complete
+                        </p>
+                        <a href="{% url 'accounts:profile_edit' %}" class="text-blue-600 hover:text-blue-800 text-sm">
+                            Complete your profile →
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Admin Support Section (for non-admin users) -->
+    {% if not user.is_staff %}
+    <div class="mb-8">
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                        <i class="fas fa-headset fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Need Help?</h3>
+                        <p class="text-gray-600 text-sm">Our support team is here to assist you with any questions or issues.</p>
+                    </div>
+                </div>
+                <a href="{% url 'accounts:contact_admin' %}"
+                   class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-comments mr-2"></i>Contact Support
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Status Alerts -->
+    {% if not user.is_staff and not user.subscription_paid %}
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-yellow-600 mr-3"></i>
+                <div>
+                    <span class="text-yellow-800 font-medium">Payment Required</span>
+                    <p class="text-yellow-700 text-sm mt-1">Complete your subscription to access all platform features</p>
+                </div>
+            </div>
+            <a href="{% url 'payments:subscribe' %}" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition-colors ml-4">
+                Pay Now
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not user.is_staff and not user.is_verified %}
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center">
+            <i class="fas fa-clock text-blue-600 mr-3"></i>
+            <span class="text-blue-800">Account under review - You'll be notified when approved</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Dashboard Sections -->
+
+    <!-- Admin Dashboard -->
+    {% if user.is_staff %}
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Admin Dashboard</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a href="{% url 'admin_panel:dashboard' %}" class="bg-gradient-to-br from-red-500 to-red-600 text-white p-6 rounded-lg text-center hover:from-red-600 hover:to-red-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-cogs fa-2x mb-3"></i>
+                <div class="font-medium">Admin Panel</div>
+                <div class="text-sm opacity-90">Manage platform</div>
+            </a>
+
+            <a href="{% url 'pitches:create_investor_post' %}" class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg text-center hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-bullhorn fa-2x mb-3"></i>
+                <div class="font-medium">Create Post</div>
+                <div class="text-sm opacity-90">Share insights</div>
+            </a>
+
+            <a href="{% url 'jobs:post_job' %}" class="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-6 rounded-lg text-center hover:from-indigo-600 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-plus fa-2x mb-3"></i>
+                <div class="font-medium">Post Job</div>
+                <div class="text-sm opacity-90">Find talent</div>
+            </a>
+
+            <a href="{% url 'pitches:investor_posts_feed' %}" class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg text-center hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-newspaper fa-2x mb-3"></i>
+                <div class="font-medium">View Insights</div>
+                <div class="text-sm opacity-90">Platform content</div>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Investor Dashboard -->
+    {% if user.is_investor and user.can_access_platform %}
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Investor Dashboard</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a href="{% url 'pitches:investor_pitch_list' %}" class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg text-center hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-search fa-2x mb-3"></i>
+                <div class="font-medium">Browse Pitches</div>
+                <div class="text-sm opacity-90">{{ total_pitches|default:0 }} available</div>
+            </a>
+
+            <a href="{% url 'pitches:create_investor_post' %}" class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg text-center hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-plus fa-2x mb-3"></i>
+                <div class="font-medium">Share Insight</div>
+                <div class="text-sm opacity-90">Write testimonial</div>
+            </a>
+
+            <a href="{% url 'pitches:investor_posts_feed' %}" class="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-6 rounded-lg text-center hover:from-indigo-600 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-newspaper fa-2x mb-3"></i>
+                <div class="font-medium">View Insights</div>
+                <div class="text-sm opacity-90">Read community</div>
+            </a>
+
+            <a href="{% url 'jobs:job_list' %}" class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-lg text-center hover:from-purple-600 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-briefcase fa-2x mb-3"></i>
+                <div class="font-medium">Browse Jobs</div>
+                <div class="text-sm opacity-90">View opportunities</div>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+   <!-- Multi-role Dashboard with Tabs (Entrepreneurs and Job Seekers) -->
+{% if not user.is_staff and not user.is_investor and user.can_access_platform %}
+<div class="mb-8">
+    <!-- Tab Navigation -->
+    <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg max-w-md mb-6">
+        <!-- Pitch Mode Tab -->
+        {% if user.user_type == 'regular' or user.user_type == 'job_seeker' %}
+        <button id="pitchTab" class="flex-1 py-2 px-4 text-sm font-medium text-center rounded-md transition-colors
+                 {% if user.user_type == 'regular' %}bg-blue-600 text-white{% else %}text-gray-700 hover:text-gray-900 hover:bg-gray-200{% endif %}"
+                onclick="switchMode('pitch')">
+            <i class="fas fa-lightbulb mr-2"></i>Pitch Mode
+        </button>
+        {% endif %}
+
+        <!-- Job Mode Tab -->
+        {% if user.user_type == 'job_seeker' or user.user_type == 'regular' %}
+        <button id="jobTab" class="flex-1 py-2 px-4 text-sm font-medium text-center rounded-md transition-colors
+                 {% if user.user_type == 'job_seeker' %}bg-blue-600 text-white{% else %}text-gray-700 hover:text-gray-900 hover:bg-gray-200{% endif %}"
+                onclick="switchMode('job')">
+            <i class="fas fa-briefcase mr-2"></i>Job Mode
+        </button>
+        {% endif %}
+
+        <!-- Employer Mode Tab -->
+        {% if user.can_post_jobs %}
+        <button id="employerTab" class="flex-1 py-2 px-4 text-sm font-medium text-center rounded-md transition-colors
+                 text-gray-700 hover:text-gray-900 hover:bg-gray-200" onclick="switchMode('employer')">
+            <i class="fas fa-building mr-2"></i>Employer Mode
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- PITCH DASHBOARD CONTENT (FIRST - Above Job Dashboard) -->
+    {% if user.user_type == 'regular' or user.user_type == 'job_seeker' %}
+    <div id="pitchDashboard" class="{% if user.user_type == 'job_seeker' %}hidden{% endif %}">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+            <i class="fas fa-lightbulb text-blue-600 mr-2"></i>Pitch Dashboard
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Submit New Pitch -->
+            <a href="{% url 'pitches:create_pitch' %}" class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg text-center hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-plus fa-2x mb-3"></i>
+                <div class="font-medium">Submit New Pitch</div>
+                <div class="text-sm opacity-90">Share your idea</div>
+            </a>
+
+            <!-- My Pitches -->
+            <a href="{% url 'pitches:pitch_list' %}" class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg text-center hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-lightbulb fa-2x mb-3"></i>
+                <div class="font-medium">My Pitches</div>
+                <div class="text-sm opacity-90">{{ my_pitches|default:0 }} submitted</div>
+            </a>
+
+            <!-- Investor Insights -->
+            <a href="{% url 'pitches:investor_posts_feed' %}" class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-lg text-center hover:from-purple-600 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-newspaper fa-2x mb-3"></i>
+                <div class="font-medium">Investor Insights</div>
+                <div class="text-sm opacity-90">Read testimonials</div>
+            </a>
+
+            <!-- Pitch Guidelines -->
+            <a href="{% url 'pitches:pitch_guidelines' %}" class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-6 rounded-lg text-center hover:from-yellow-600 hover:to-yellow-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                <div class="font-medium">Pitch Guidelines</div>
+                <div class="text-sm opacity-90">Tips for success</div>
+            </a>
+        </div>
+
+        <!-- Pitch Statistics Row -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-chart-line text-blue-500 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500">Total Pitches</p>
+                        <p class="text-lg font-semibold text-gray-900">{{ my_pitches|default:0 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-eye text-green-500 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500">Views Received</p>
+                        <p class="text-lg font-semibold text-gray-900">{{ pitch_views|default:0 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-handshake text-purple-500 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500">Investor Interest</p>
+                        <p class="text-lg font-semibold text-gray-900">{{ investor_interest|default:0 }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- JOB SEARCH DASHBOARD CONTENT (SECOND - Below Pitch Dashboard) -->
+    {% if user.user_type == 'job_seeker' or user.user_type == 'regular' %}
+    <div id="jobDashboard" class="{% if user.user_type == 'regular' %}hidden{% endif %}">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+            <i class="fas fa-briefcase text-green-600 mr-2"></i>Job Search Dashboard
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Browse Jobs -->
+            <a href="{% url 'jobs:job_list' %}" class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg text-center hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-search fa-2x mb-3"></i>
+                <div class="font-medium">Browse Jobs</div>
+                <div class="text-sm opacity-90">Find opportunities</div>
+            </a>
+
+            <!-- My Applications -->
+            <a href="{% url 'jobs:my_applications' %}" class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg text-center hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-file-alt fa-2x mb-3"></i>
+                <div class="font-medium">My Applications</div>
+                <div class="text-sm opacity-90">{{ my_applications|default:0 }} submitted</div>
+            </a>
+
+            <!-- Saved Jobs -->
+            <a href="{% url 'jobs:saved_jobs' %}" class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-lg text-center hover:from-purple-600 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-bookmark fa-2x mb-3"></i>
+                <div class="font-medium">Saved Jobs</div>
+                <div class="text-sm opacity-90">{{ saved_jobs|default:0 }} bookmarked</div>
+            </a>
+
+            <!-- Job Alerts -->
+            <a href="{% url 'jobs:job_alerts' %}" class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-6 rounded-lg text-center hover:from-yellow-600 hover:to-yellow-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-bell fa-2x mb-3"></i>
+                <div class="font-medium">Job Alerts</div>
+                <div class="text-sm opacity-90">{{ job_alerts|default:0 }} active</div>
+            </a>
+        </div>
+
+        <!-- Job Search Statistics Row -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-paper-plane text-blue-500 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500">Applications Sent</p>
+                        <p class="text-lg font-semibold text-gray-900">{{ my_applications|default:0 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-bookmark text-green-500 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500">Saved Jobs</p>
+                        <p class="text-lg font-semibold text-gray-900">{{ saved_jobs|default:0 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-yellow-500">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-bell text-yellow-500 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500">Active Alerts</p>
+                        <p class="text-lg font-semibold text-gray-900">{{ job_alerts|default:0 }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- EMPLOYER DASHBOARD CONTENT -->
+    {% if user.can_post_jobs %}
+    <div id="employerDashboard" class="hidden">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+            <i class="fas fa-building text-indigo-600 mr-2"></i>Employer Dashboard
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <!-- Post a Job -->
+            <a href="{% url 'jobs:post_job' %}" class="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-6 rounded-lg text-center hover:from-indigo-600 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-plus fa-2x mb-3"></i>
+                <div class="font-medium">Post a Job</div>
+                <div class="text-sm opacity-90">Find talent</div>
+            </a>
+
+            <!-- My Job Postings -->
+            <a href="{% url 'jobs:my_job_postings' %}" class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg text-center hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-briefcase fa-2x mb-3"></i>
+                <div class="font-medium">My Job Postings</div>
+                <div class="text-sm opacity-90">{{ my_job_postings|default:0 }} active</div>
+            </a>
+
+            <!-- Browse All Jobs -->
+            <a href="{% url 'jobs:job_list' %}" class="bg-gradient-to-br from-gray-500 to-gray-600 text-white p-6 rounded-lg text-center hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-eye fa-2x mb-3"></i>
+                <div class="font-medium">Browse All Jobs</div>
+                <div class="text-sm opacity-90">View platform</div>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+    {% endif %}
+    <!-- Quick Actions -->
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Common Actions for All Users -->
+            <a href="{% url 'chat:chat_list' %}" class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-lg text-center hover:from-purple-600 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg relative">
+                <i class="fas fa-comments fa-2x mb-3"></i>
+                <div class="font-medium">Messages</div>
+                <div class="text-sm opacity-90">Connect & chat</div>
+                <!-- Notification badge for unread messages -->
+                <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center" id="dashboardMessageBadge" style="display: none;">
+                    0
+                </span>
+            </a>
+
+            {% if not user.is_staff %}
+            <a href="{% url 'accounts:profile_view' %}" class="bg-gradient-to-br from-gray-500 to-gray-600 text-white p-6 rounded-lg text-center hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-user fa-2x mb-3"></i>
+                <div class="font-medium">Profile</div>
+                <div class="text-sm opacity-90">View & edit</div>
+            </a>
+            {% endif %}
+
+            {% if user.is_job_seeker %}
+            <a href="{% url 'jobs:job_search' %}" class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg text-center hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-search-plus fa-2x mb-3"></i>
+                <div class="font-medium">Advanced Search</div>
+                <div class="text-sm opacity-90">Filter jobs</div>
+            </a>
+
+            <a href="{% url 'accounts:profile_edit' %}" class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg text-center hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-user-edit fa-2x mb-3"></i>
+                <div class="font-medium">Update Profile</div>
+                <div class="text-sm opacity-90">Enhance visibility</div>
+            </a>
+            {% endif %}
+
+            {% if not user.is_staff and not user.is_job_seeker %}
+            <a href="{% url 'accounts:profile_edit' %}" class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg text-center hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-user-edit fa-2x mb-3"></i>
+                <div class="font-medium">Edit Profile</div>
+                <div class="text-sm opacity-90">Update details</div>
+            </a>
+
+            <a href="{% url 'accounts:change_password' %}" class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-lg text-center hover:from-orange-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-lock fa-2x mb-3"></i>
+                <div class="font-medium">Change Password</div>
+                <div class="text-sm opacity-90">Security</div>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+   <!-- Replace the corrupted Statistics section starting around line 325 -->
+    <!-- Statistics Dashboard -->
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+      {% if user.is_staff %}
+            Platform Overview
+        {% else %}
+            {% if user.is_investor %}
+                Platform Overview
+            {% else %}
+                {% if user.is_job_seeker %}
+                    Your Job Search Statistics
+                {% else %}
+                    Your Statistics
+                {% endif %}
+            {% endif %}
+        {% endif %}
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% if user.is_staff %}
+            <!-- Admin Stats -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                        <i class="fas fa-users fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Total Users</h3>
+                        <p class="text-3xl font-bold text-blue-600">{{ total_users|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Platform users</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-coins fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Investors</h3>
+                        <p class="text-3xl font-bold text-green-600">{{ total_investors|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Active investors</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                        <i class="fas fa-lightbulb fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Entrepreneurs</h3>
+                        <p class="text-3xl font-bold text-purple-600">{{ total_entrepreneurs|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Idea creators</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
+                        <i class="fas fa-briefcase fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Active Jobs</h3>
+                        <p class="text-3xl font-bold text-yellow-600">{{ total_active_jobs|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Job postings</p>
+                    </div>
+                </div>
+            </div>
+
+            {% elif user.is_job_seeker %}
+            <!-- Job Seeker Stats -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                        <i class="fas fa-file-alt fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Applications</h3>
+                        <p class="text-3xl font-bold text-blue-600">{{ my_applications|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Total submitted</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-eye fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Profile Views</h3>
+                        <p class="text-3xl font-bold text-green-600">{{ profile_views|default:0 }}</p>
+                        <p class="text-sm text-gray-500">This month</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                        <i class="fas fa-bookmark fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Saved Jobs</h3>
+                        <p class="text-3xl font-bold text-purple-600">{{ saved_jobs|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Bookmarked</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-orange-100 text-orange-600 mr-4">
+                        <i class="fas fa-bell fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Job Alerts</h3>
+                        <p class="text-3xl font-bold text-orange-600">{{ job_alerts|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Active alerts</p>
+                    </div>
+                </div>
+            </div>
+
+            {% elif user.is_investor %}
+            <!-- Investor Stats -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                        <i class="fas fa-lightbulb fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Available Pitches</h3>
+                        <p class="text-3xl font-bold text-blue-600">{{ total_pitches|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Ready for review</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-heart fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">My Interests</h3>
+                        <p class="text-3xl font-bold text-green-600">{{ my_interests|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Pitches you liked</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                        <i class="fas fa-briefcase fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">My Job Postings</h3>
+                        <p class="text-3xl font-bold text-purple-600">{{ my_job_postings|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Active positions</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-orange-100 text-orange-600 mr-4">
+                        <i class="fas fa-chart-line fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Portfolio Growth</h3>
+                        <p class="text-3xl font-bold text-orange-600">+12%</p>
+                        <p class="text-sm text-gray-500">This quarter</p>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Entrepreneur Stats -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                        <i class="fas fa-lightbulb fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Total Pitches</h3>
+                        <p class="text-3xl font-bold text-blue-600">{{ my_pitches|default:0 }}</p>
+                        <p class="text-sm text-gray-500">All submissions</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-check-circle fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Approved</h3>
+                        <p class="text-3xl font-bold text-green-600">{{ approved_pitches|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Live on platform</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                        <i class="fas fa-briefcase fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">My Job Postings</h3>
+                        <p class="text-3xl font-bold text-purple-600">{{ my_job_postings|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Active positions</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-red-100 text-red-600 mr-4">
+                        <i class="fas fa-times-circle fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Needs Work</h3>
+                        <p class="text-3xl font-bold text-red-600">{{ rejected_pitches|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Requires revision</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Activity (Jobs/Pitches based on user type) -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    {% if user.is_staff %}
+                    <a href="{% url 'admin_panel:admin_dashboard' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-cogs mr-2"></i>
+                        Admin Panel
+                    </a>
+                    <a href="{% url 'admin_panel:job_management' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-briefcase mr-2"></i>
+                        Manage Jobs
+                    </a>
+                    <a href="{% url 'accounts:notification_settings' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-bell mr-2"></i>
+                        Notification Settings
+                    </a>
+                    {% elif user.is_job_seeker %}
+                    <a href="{% url 'jobs:job_search' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-search mr-2"></i>
+                        Advanced Job Search
+                    </a>
+                    <a href="{% url 'jobs:create_job_alert' %}" class="flex items-center text-sm text-green-600 hover:text-green-800">
+                        <i class="fas fa-bell mr-2"></i>
+                        Create Job Alert
+                    </a>
+                    <a href="{% url 'accounts:profile_edit' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-edit mr-2"></i>
+                        Edit Profile
+                    </a>
+                    <a href="{% url 'accounts:contact_admin' %}" class="flex items-center text-sm text-green-600 hover:text-green-800">
+                        <i class="fas fa-headset mr-2"></i>
+                        Contact Support
+                    </a>
+                    {% else %}
+                    <a href="{% url 'accounts:profile_edit' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-edit mr-2"></i>
+                        Edit Profile
+                    </a>
+                    <a href="{% url 'accounts:change_password' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-lock mr-2"></i>
+                        Change Password
+                    </a>
+                    {% if user.can_post_jobs %}
+                    <a href="{% url 'jobs:post_job' %}" class="flex items-center text-sm text-green-600 hover:text-green-800">
+                        <i class="fas fa-plus mr-2"></i>
+                        Post a Job
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'accounts:contact_admin' %}" class="flex items-center text-sm text-green-600 hover:text-green-800">
+                        <i class="fas fa-headset mr-2"></i>
+                        Contact Support
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchMode(mode) {
+    // Hide all dashboards
+    const dashboards = ['pitchDashboard', 'jobDashboard', 'employerDashboard'];
+    dashboards.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.classList.add('hidden');
+    });
+
+    // Remove active state from all tabs
+    const tabs = ['pitchTab', 'jobTab', 'employerTab'];
+    tabs.forEach(id => {
+        const tab = document.getElementById(id);
+        if (tab) {
+            tab.classList.remove('bg-blue-600', 'text-white');
+            tab.classList.add('text-gray-700', 'hover:text-gray-900', 'hover:bg-gray-200');
+        }
+    });
+
+    // Show selected dashboard and activate tab
+    const selectedDashboard = document.getElementById(mode + 'Dashboard');
+    const selectedTab = document.getElementById(mode + 'Tab');
+
+    if (selectedDashboard) selectedDashboard.classList.remove('hidden');
+    if (selectedTab) {
+        selectedTab.classList.remove('text-gray-700', 'hover:text-gray-900', 'hover:bg-gray-200');
+        selectedTab.classList.add('bg-blue-600', 'text-white');
+    }
+
+    // Store user preference
+    localStorage.setItem('dashboardMode', mode);
+}
+
+// Initialize dashboard mode on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedMode = localStorage.getItem('dashboardMode');
+
+    // Smart default based on user registration type
+    let defaultMode;
+    {% if user.user_type == 'job_seeker' %}
+        // Registered as job seeker → default to Job Mode
+        defaultMode = 'job';
+    {% else %}
+        {% if user.user_type == 'regular' %}
+            // Registered as entrepreneur → default to Pitch Mode
+            defaultMode = 'pitch';
+        {% else %}
+            // Fallback for other user types
+            defaultMode = 'pitch';
+        {% endif %}
+    {% endif %}
+
+    const modeToLoad = savedMode || defaultMode;
+
+    // Only switch if the mode exists (user has access to it)
+    const targetDashboard = document.getElementById(modeToLoad + 'Dashboard');
+    if (targetDashboard) {
+        switchMode(modeToLoad);
+    }
+});
+// Update dashboard message badge when notifications arrive
+document.addEventListener('DOMContentLoaded', function() {
+    const dashboardBadge = document.getElementById('dashboardMessageBadge');
+
+    // Function to update dashboard badge specifically
+    function updateDashboardBadge(count) {
+        if (dashboardBadge) {
+            if (count > 0) {
+                dashboardBadge.textContent = count > 9 ? '9+' : count.toString();
+                dashboardBadge.style.display = 'flex';
+            } else {
+                dashboardBadge.style.display = 'none';
+            }
+        }
+    }
+
+    // Listen for notification updates from base template
+    if (typeof updateNotificationBadges !== 'undefined') {
+        // Store original function
+        const originalUpdateFunction = updateNotificationBadges;
+        // Override to also update dashboard badge
+        updateNotificationBadges = function(count) {
+            originalUpdateFunction(count);
+            updateDashboardBadge(count);
+        };
+    }
+
+    // Set initial badge state
+    const initialCount = {{ unread_message_count|default:0 }};
+    updateDashboardBadge(initialCount);
+});
+</script>
+
+                      Recent Platform Activity
+
+    {% if user.is_job_seeker %}
+        My Recent Applications
+    {% else %}
+        {% if user.is_investor %}
+            Recent Pitches
+        {% else %}
+            My Recent Pitches
+        {% endif %}
+    {% endif %}
+
+                </h3>
+                <a href="{% if user.is_staff %}{% url 'admin_panel:admin_dashboard' %}{% elif user.is_job_seeker %}{% url 'jobs:my_applications' %}{% elif user.is_investor %}{% url 'pitches:investor_pitch_list' %}{% else %}{% url 'pitches:pitch_list' %}{% endif %}"
+                   class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    View all →
+                </a>
+            </div>
+
+            {% if user.is_job_seeker %}
+                {% if recent_applications %}
+                    <div class="space-y-3">
+                        {% for application in recent_applications %}
+                        <div class="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-900">{{ application.job_posting.title|truncatechars:40 }}</h4>
+                                <p class="text-sm text-gray-600">{{ application.job_posting.company_name }}</p>
+                                <div class="flex items-center text-sm text-gray-500 mt-1">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                        {% if application.status == 'hired' %}bg-green-100 text-green-800
+                                        {% elif application.status == 'shortlisted' %}bg-blue-100 text-blue-800
+                                        {% elif application.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                        {% elif application.status == 'rejected' %}bg-red-100 text-red-800
+                                        {% else %}bg-gray-100 text-gray-800
+                                        {% endif %}">
+                                        {{ application.get_status_display }}
+                                    </span>
+                                    <span class="ml-2">{{ application.applied_at|timesince }} ago</span>
+                                </div>
+                            </div>
+                            <a href="{% url 'jobs:application_detail' application.id %}"
+                               class="text-blue-600 hover:text-blue-800 ml-2">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-file-alt fa-3x mb-4 text-gray-300"></i>
+                        <p class="text-lg font-medium">No applications yet</p>
+                        <p class="text-sm">Start applying to jobs to see your application history here</p>
+                        <a href="{% url 'jobs:job_list' %}"
+                           class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                            Browse Jobs
+                        </a>
+                    </div>
+                {% endif %}
+            {% else %}
+                {% if recent_pitches %}
+                    <div class="space-y-3">
+                        {% for pitch in recent_pitches %}
+                        <div class="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-900">{{ pitch.title|truncatechars:40 }}</h4>
+                                <div class="flex items-center text-sm text-gray-500 mt-1">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                        {% if pitch.status == 'approved' %}bg-green-100 text-green-800
+                                        {% elif pitch.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                        {% elif pitch.status == 'rejected' %}bg-red-100 text-red-800
+                                        {% endif %}">
+                                        {{ pitch.get_status_display }}
+                                    </span>
+                                    <span class="ml-2">{{ pitch.submitted_at|timesince }} ago</span>
+                                </div>
+                            </div>
+                            <a href="{% url 'pitches:pitch_detail' pitch.id %}"
+                               class="text-blue-600 hover:text-blue-800 ml-2">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-lightbulb fa-3x mb-4 text-gray-300"></i>
+                        <p class="text-lg font-medium">No pitches yet</p>
+                        <p class="text-sm">
+                            {% if user.is_staff %}
+                                Platform activity will appear here
+                            {% elif user.is_investor %}
+                                Browse available pitches to get started
+                            {% else %}
+                                Submit your first pitch to get started
+                            {% endif %}
+                        </p>
+                        {% if not user.is_staff %}
+                        <a href="{% if user.is_investor %}{% url 'pitches:investor_pitch_list' %}{% else %}{% url 'pitches:create_pitch' %}{% endif %}"
+                           class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                            {% if user.is_investor %}Browse Pitches{% else %}Create Pitch{% endif %}
+                        </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Success Tips & Getting Started -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                {% if user.is_staff %}
+                    Admin Resources
+                {% elif user.is_job_seeker %}
+                    Job Search Success Tips
+                {% elif user.is_investor %}
+                    Investor Success Tips
+                {% else %}
+                    Entrepreneur Success Tips
+                {% endif %}
+            </h3>
+
+            <div class="space-y-4">
+                {% if user.is_staff %}
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-red-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Monitor Platform Health</h4>
+                        <p class="text-sm text-gray-600">Keep track of user activity, pitch approvals, and job platform metrics</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-users text-blue-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Support Users</h4>
+                        <p class="text-sm text-gray-600">Respond to user inquiries and help resolve platform issues</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Review Content</h4>
+                        <p class="text-sm text-gray-600">Approve quality pitches and moderate job postings</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-briefcase text-purple-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Manage Jobs Platform</h4>
+                        <p class="text-sm text-gray-600">Oversee job postings, applications, and employer-candidate connections</p>
+                    </div>
+                </div>
+
+                {% elif user.is_job_seeker %}
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-blue-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Optimize Your Profile</h4>
+                        <p class="text-sm text-gray-600">Complete your profile with skills, experience, and a professional photo</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-file-alt text-green-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Customize Applications</h4>
+                        <p class="text-sm text-gray-600">Tailor your cover letter and resume for each specific job application</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-bell text-purple-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Set Up Job Alerts</h4>
+                        <p class="text-sm text-gray-600">Create alerts for your target roles to never miss opportunities</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-network-wired text-orange-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Network Actively</h4>
+                        <p class="text-sm text-gray-600">Connect with employers and industry professionals through the platform</p>
+                    </div>
+                </div>
+
+                {% elif user.is_investor %}
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-search text-blue-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Review Thoroughly</h4>
+                        <p class="text-sm text-gray-600">Examine business plans, financials, and market research carefully</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-comments text-green-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Ask Smart Questions</h4>
+                        <p class="text-sm text-gray-600">Use chat to discuss market size, competition, and growth plans</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-briefcase text-purple-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Post Quality Jobs</h4>
+                        <p class="text-sm text-gray-600">Create detailed job postings to attract top talent for your portfolio companies</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-chart-line text-orange-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Diversify Portfolio</h4>
+                        <p class="text-sm text-gray-600">Spread investments across different sectors and stages</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-blue-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Complete Your Profile</h4>
+                        <p class="text-sm text-gray-600">A detailed profile builds trust and attracts serious investors</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-file-alt text-green-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Prepare Strong Materials</h4>
+                        <p class="text-sm text-gray-600">Include detailed business plans, financial projections, and prototypes</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-briefcase text-purple-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Post Jobs for Your Startup</h4>
+                        <p class="text-sm text-gray-600">Use the job platform to find talented team members as you grow</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-target text-orange-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">Know Your Numbers</h4>
+                        <p class="text-sm text-gray-600">Be ready to discuss metrics, market size, and revenue projections</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+           <!-- Quick Links -->
+        <div class="mt-6 pt-4 border-t border-gray-200">
+            <h4 class="font-medium text-gray-900 mb-3">Quick Links</h4>
+            <div class="space-y-2">
+                {% if user.is_staff %}
+                <a href="{% url 'admin_panel:admin_dashboard' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-cogs mr-2"></i>
+                    Admin Panel
+                </a>
+                <a href="{% url 'admin_panel:job_management' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-briefcase mr-2"></i>
+                    Manage Jobs
+                </a>
+                <a href="{% url 'accounts:notification_settings' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-bell mr-2"></i>
+                    Notification Settings
+                </a>
+                {% elif user.is_job_seeker %}
+                <a href="{% url 'jobs:job_search' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-search mr-2"></i>
+                    Advanced Job Search
+                </a>
+                <a href="{% url 'jobs:create_job_alert' %}" class="flex items-center text-sm text-green-600 hover:text-green-800">
+                    <i class="fas fa-bell mr-2"></i>
+                    Create Job Alert
+                </a>
+                <a href="{% url 'accounts:profile_edit' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-edit mr-2"></i>
+                    Edit Profile
+                </a>
+                <a href="{% url 'accounts:contact_admin' %}" class="flex items-center text-sm text-green-600 hover:text-green-800">
+                    <i class="fas fa-headset mr-2"></i>
+                    Contact Support
+                </a>
+                {% else %}
+                <a href="{% url 'accounts:profile_edit' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-edit mr-2"></i>
+                    Edit Profile
+                </a>
+                <a href="{% url 'accounts:change_password' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-lock mr-2"></i>
+                    Change Password
+                </a>
+                {% if user.can_post_jobs %}
+                <a href="{% url 'jobs:post_job' %}" class="flex items-center text-sm text-green-600 hover:text-green-800">
+                    <i class="fas fa-plus mr-2"></i>
+                    Post a Job
+                </a>
+                {% endif %}
+                <a href="{% url 'accounts:contact_admin' %}" class="flex items-center text-sm text-green-600 hover:text-green-800">
+                    <i class="fas fa-headset mr-2"></i>
+                    Contact Support
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+function switchMode(mode) {
+    // Hide all dashboards
+    const dashboards = ['pitchDashboard', 'jobDashboard', 'employerDashboard'];
+    dashboards.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.classList.add('hidden');
+    });
+
+    // Remove active state from all tabs
+    const tabs = ['pitchTab', 'jobTab', 'employerTab'];
+    tabs.forEach(id => {
+        const tab = document.getElementById(id);
+        if (tab) {
+            tab.classList.remove('bg-blue-600', 'text-white');
+            tab.classList.add('text-gray-700', 'hover:text-gray-900', 'hover:bg-gray-200');
+        }
+    });
+
+    // Show selected dashboard and activate tab
+    const selectedDashboard = document.getElementById(mode + 'Dashboard');
+    const selectedTab = document.getElementById(mode + 'Tab');
+
+    if (selectedDashboard) selectedDashboard.classList.remove('hidden');
+    if (selectedTab) {
+        selectedTab.classList.remove('text-gray-700', 'hover:text-gray-900', 'hover:bg-gray-200');
+        selectedTab.classList.add('bg-blue-600', 'text-white');
+    }
+
+    // Store user preference
+    localStorage.setItem('dashboardMode', mode);
+}
+
+// Initialize dashboard mode on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedMode = localStorage.getItem('dashboardMode');
+
+    // Default to appropriate mode based on user type
+    {% if user.is_job_seeker %}
+    const defaultMode = 'job';
+    {% elif not user.is_job_seeker %}
+    const defaultMode = 'pitch';
+    {% else %}
+    const defaultMode = 'pitch';
+    {% endif %}
+
+    const modeToLoad = savedMode || defaultMode;
+
+    // Only switch if the mode exists (user has access to it)
+    const targetDashboard = document.getElementById(modeToLoad + 'Dashboard');
+    if (targetDashboard) {
+        switchMode(modeToLoad);
+    }
+});
+
+// Update dashboard message badge when notifications arrive
+document.addEventListener('DOMContentLoaded', function() {
+    const dashboardBadge = document.getElementById('dashboardMessageBadge');
+
+    // Function to update dashboard badge specifically
+    function updateDashboardBadge(count) {
+        if (dashboardBadge) {
+            if (count > 0) {
+                dashboardBadge.textContent = count > 9 ? '9+' : count.toString();
+                dashboardBadge.style.display = 'flex';
+            } else {
+                dashboardBadge.style.display = 'none';
+            }
+        }
+    }
+
+    // Listen for notification updates from base template
+    if (typeof updateNotificationBadges !== 'undefined') {
+        // Store original function
+        const originalUpdateFunction = updateNotificationBadges;
+        // Override to also update dashboard badge
+        updateNotificationBadges = function(count) {
+            originalUpdateFunction(count);
+            updateDashboardBadge(count);
+        };
+    }
+
+    // Set initial badge state
+    const initialCount = {{ unread_message_count|default:0 }};
+    updateDashboardBadge(initialCount);
+});
+</script>
+{% endblock %}

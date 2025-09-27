@@ -1,0 +1,743 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Job Management - InvestorConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    .status-badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Job Management</h1>
+                <p class="text-gray-600 mt-2">Manage job postings, applications, and analytics</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{% url 'jobs:post_job' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                    <i class="fas fa-plus mr-2"></i>
+                    Post New Job
+                </a>
+                <button onclick="exportJobData()" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-download mr-2"></i>
+                    Export Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Dashboard -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Jobs -->
+        <div class="metric-card bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-briefcase text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Jobs</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900" data-stat="total-jobs">{{ total_jobs|default:0 }}</div>
+                                <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                    <i class="fas fa-arrow-up text-xs mr-1"></i>
+                                    12%
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Jobs -->
+        <div class="metric-card bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-check-circle text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Active Jobs</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900" data-stat="active-jobs">{{ active_jobs|default:0 }}</div>
+                                <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                    <i class="fas fa-arrow-up text-xs mr-1"></i>
+                                    8%
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Applications -->
+        <div class="metric-card bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-users text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Applications</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900" data-stat="total-applications">{{ total_applications|default:0 }}</div>
+                                <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                    <i class="fas fa-arrow-up text-xs mr-1"></i>
+                                    24%
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avg Applications per Job -->
+        <div class="metric-card bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-orange-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-chart-line text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Avg Applications</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900" data-stat="avg-applications">{{ avg_applications|default:"0"|floatformat:1 }}</div>
+                                <div class="ml-2 flex items-baseline text-sm font-semibold text-red-600">
+                                    <i class="fas fa-arrow-down text-xs mr-1"></i>
+                                    3%
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Applications Trend Chart -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Applications Trend (Last 30 Days)</h3>
+            <div class="chart-container">
+                <canvas id="applicationsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Job Categories Distribution -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Jobs by Industry</h3>
+            <div class="chart-container">
+                <canvas id="industryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="bg-white shadow rounded-lg mb-6">
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- Search -->
+                <div class="md:col-span-2">
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search Jobs</label>
+                    <div class="relative">
+                        <input type="text" id="search" name="search"
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                               placeholder="Search by title, company..." value="{{ search_query|default:'' }}">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="status" name="status"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">All Status</option>
+                        <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                        <option value="expired" {% if selected_status == 'expired' %}selected{% endif %}>Expired</option>
+                    </select>
+                </div>
+
+                <!-- Industry Filter -->
+                <div>
+                    <label for="industry" class="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                    <select id="industry" name="industry"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">All Industries</option>
+                        {% for value, label in industry_choices %}
+                        <option value="{{ value }}" {% if selected_industry == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Job Type Filter -->
+                <div>
+                    <label for="job_type" class="block text-sm font-medium text-gray-700 mb-1">Job Type</label>
+                    <select id="job_type" name="job_type"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">All Types</option>
+                        {% for value, label in job_type_choices %}
+                        <option value="{{ value }}" {% if selected_job_type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filter Actions -->
+                <div class="flex items-end space-x-2">
+                    <button onclick="applyFilters()"
+                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                        Apply
+                    </button>
+                    <button onclick="clearFilters()"
+                            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jobs Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-medium text-gray-900">Job Listings</h3>
+                <div class="flex items-center space-x-3">
+                    <span class="text-sm text-gray-700">{{ jobs.count }} of {{ total_jobs }} jobs</span>
+                    <div class="flex items-center space-x-1">
+                        <label for="per_page" class="text-sm text-gray-700">Show:</label>
+                        <select id="per_page" name="per_page" onchange="changePerPage()"
+                                class="border border-gray-300 rounded px-2 py-1 text-sm">
+                            <option value="10" {% if request.GET.per_page == '10' %}selected{% endif %}>10</option>
+                            <option value="25" {% if request.GET.per_page == '25' %}selected{% endif %}>25</option>
+                            <option value="50" {% if request.GET.per_page == '50' %}selected{% endif %}>50</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <input type="checkbox" id="select-all" onchange="toggleSelectAll()"
+                                   class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Job Details
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Applications
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Posted
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for job in jobs %}
+                    <tr class="hover:bg-gray-50" data-job-id="{{ job.id }}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="checkbox" name="selected_jobs" value="{{ job.id }}"
+                                   class="job-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-start">
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium text-gray-900">
+                                       {% if job.id %}
+                                            <a href="{% url 'jobs:job_detail' job.id %}">
+                                        {% else %}
+                                            <a href="#" class="text-gray-400 cursor-not-allowed">
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-sm text-gray-500">{{ job.company_name }}</div>
+                                    <div class="flex items-center mt-1 space-x-3 text-xs text-gray-500">
+                                        <span><i class="fas fa-map-marker-alt mr-1"></i>{{ job.location }}</span>
+                                        <span><i class="fas fa-briefcase mr-1"></i>{{ job.get_job_type_display }}</span>
+                                        <span><i class="fas fa-industry mr-1"></i>{{ job.get_industry_display }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if job.is_active %}
+                                {% if job.application_deadline and job.application_deadline <= now %}
+                                    <span class="status-badge bg-red-100 text-red-800">Expired</span>
+                                {% else %}
+                                    <span class="status-badge bg-green-100 text-green-800">Active</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="status-badge bg-yellow-100 text-yellow-800">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <span class="text-sm font-medium text-gray-900">{{ job.jobapplication_set.count|default:0 }}</span>
+                                <a href="{% url 'admin_panel:job_applications' job.id %}"
+                                   class="ml-2 text-xs text-indigo-600 hover:text-indigo-900">
+                                    View
+                                </a>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ job.created_at|timesince }} ago
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex items-center space-x-2">
+                                <a href="{% url 'jobs:job_detail' job.id %}"
+                                   class="text-indigo-600 hover:text-indigo-900" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if job.poster == request.user or request.user.is_staff %}
+                                <a href="{% url 'jobs:edit_job' job.id %}"
+                                   class="text-blue-600 hover:text-blue-900" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% endif %}
+                                <button onclick="toggleJobStatus('{{ job.id }}')"
+                                        class="text-yellow-600 hover:text-yellow-900" title="Toggle Status">
+                                    <i class="fas fa-toggle-{% if job.is_active %}on{% else %}off{% endif %}"></i>
+                                </button>
+                                <button onclick="deleteJob('{{ job.id }}')"
+                                        class="text-red-600 hover:text-red-900" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-briefcase text-4xl text-gray-300 mb-4"></i>
+                            <p class="text-lg">No jobs found</p>
+                            <p class="text-sm">Try adjusting your filters or create a new job posting.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if jobs.has_other_pages %}
+        <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+            <div class="flex items-center justify-between">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if jobs.has_previous %}
+                        <a href="?page={{ jobs.previous_page_number }}&{{ request.GET.urlencode }}"
+                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Previous
+                        </a>
+                    {% endif %}
+                    {% if jobs.has_next %}
+                        <a href="?page={{ jobs.next_page_number }}&{{ request.GET.urlencode }}"
+                           class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing page {{ jobs.number }} of {{ jobs.paginator.num_pages }}
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                            {% if jobs.has_previous %}
+                                <a href="?page=1&{{ request.GET.urlencode }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                                <a href="?page={{ jobs.previous_page_number }}&{{ request.GET.urlencode }}" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            {% endif %}
+
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-indigo-50 text-sm font-medium text-indigo-600">
+                                {{ jobs.number }}
+                            </span>
+
+                            {% if jobs.has_next %}
+                                <a href="?page={{ jobs.next_page_number }}&{{ request.GET.urlencode }}" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                                <a href="?page={{ jobs.paginator.num_pages }}&{{ request.GET.urlencode }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Bulk Actions Bar (Hidden by default) -->
+    <div id="bulk-actions-bar" class="fixed bottom-0 left-0 right-0 bg-indigo-600 text-white p-4 transform translate-y-full transition-transform duration-300 ease-in-out shadow-lg z-50">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <span id="selected-count">0 jobs selected</span>
+                <button onclick="clearSelection()" class="text-indigo-200 hover:text-white">
+                    Clear selection
+                </button>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="bulkAction('activate')"
+                        class="px-4 py-2 bg-green-500 hover:bg-green-600 rounded text-sm font-medium">
+                    Activate
+                </button>
+                <button onclick="bulkAction('deactivate')"
+                        class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded text-sm font-medium">
+                    Deactivate
+                </button>
+                <button onclick="bulkAction('delete')"
+                        class="px-4 py-2 bg-red-500 hover:bg-red-600 rounded text-sm font-medium">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSRF Token -->
+{% csrf_token %}
+
+<!-- Include Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<script>
+// Get CSRF token
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+// Initialize charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    updateBulkActionsBar();
+});
+
+// Chart initialization
+function initializeCharts() {
+    // Applications Trend Chart
+    const applicationsCtx = document.getElementById('applicationsChart').getContext('2d');
+    new Chart(applicationsCtx, {
+        type: 'line',
+        data: {
+            labels: {{ applications_chart_labels|default:"[]"|safe }},
+            datasets: [{
+                label: 'Applications',
+                data: {{ applications_chart_data|default:"[]"|safe }},
+                borderColor: 'rgb(99, 102, 241)',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Industry Distribution Chart
+    const industryCtx = document.getElementById('industryChart').getContext('2d');
+    new Chart(industryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ industry_chart_labels|default:"[]"|safe }},
+            datasets: [{
+                data: {{ industry_chart_data|default:"[]"|safe }},
+                backgroundColor: [
+                    '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#6B7280'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// Filter functions
+function applyFilters() {
+    const form = document.createElement('form');
+    form.method = 'GET';
+
+    const filters = ['search', 'status', 'industry', 'job_type', 'per_page'];
+    filters.forEach(filterId => {
+        const element = document.getElementById(filterId);
+        if (element && element.value) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = filterId;
+            input.value = element.value;
+            form.appendChild(input);
+        }
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function clearFilters() {
+    window.location.href = window.location.pathname;
+}
+
+function changePerPage() {
+    applyFilters();
+}
+
+// Selection functions
+function toggleSelectAll() {
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.job-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+
+    updateBulkActionsBar();
+}
+
+function updateBulkActionsBar() {
+    const checkboxes = document.querySelectorAll('.job-checkbox:checked');
+    const bulkBar = document.getElementById('bulk-actions-bar');
+    const selectedCount = document.getElementById('selected-count');
+
+    if (checkboxes.length > 0) {
+        selectedCount.textContent = `${checkboxes.length} job${checkboxes.length !== 1 ? 's' : ''} selected`;
+        bulkBar.classList.remove('translate-y-full');
+    } else {
+        bulkBar.classList.add('translate-y-full');
+    }
+}
+
+function clearSelection() {
+    document.querySelectorAll('.job-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('select-all').checked = false;
+    updateBulkActionsBar();
+}
+
+// Add event listeners to individual checkboxes
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('job-checkbox')) {
+        updateBulkActionsBar();
+
+        // Update select-all checkbox state
+        const allCheckboxes = document.querySelectorAll('.job-checkbox');
+        const checkedCheckboxes = document.querySelectorAll('.job-checkbox:checked');
+        const selectAll = document.getElementById('select-all');
+
+        selectAll.checked = allCheckboxes.length === checkedCheckboxes.length;
+        selectAll.indeterminate = checkedCheckboxes.length > 0 && checkedCheckboxes.length < allCheckboxes.length;
+    }
+});
+
+// Job actions
+function toggleJobStatus(jobId) {
+    if (confirm('Are you sure you want to toggle this job status?')) {
+        fetch(`/admin-panel/jobs/${jobId}/toggle-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred');
+        });
+    }
+}
+
+function deleteJob(jobId) {
+    if (confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+        fetch(`/admin-panel/jobs/${jobId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred');
+        });
+    }
+}
+
+// Bulk actions
+function bulkAction(action) {
+    const selectedJobs = Array.from(document.querySelectorAll('.job-checkbox:checked')).map(cb => cb.value);
+
+    if (selectedJobs.length === 0) {
+        alert('Please select jobs first');
+        return;
+    }
+
+    let confirmMessage = '';
+    switch(action) {
+        case 'activate':
+            confirmMessage = `Are you sure you want to activate ${selectedJobs.length} job(s)?`;
+            break;
+        case 'deactivate':
+            confirmMessage = `Are you sure you want to deactivate ${selectedJobs.length} job(s)?`;
+            break;
+        case 'delete':
+            confirmMessage = `Are you sure you want to delete ${selectedJobs.length} job(s)? This action cannot be undone.`;
+            break;
+    }
+
+    if (confirm(confirmMessage)) {
+        fetch(`/admin-panel/jobs/bulk-action/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: action,
+                job_ids: selectedJobs
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred');
+        });
+    }
+}
+
+// Export functionality
+function exportJobData() {
+    const filters = new URLSearchParams();
+
+    // Add current filters to export
+    const filterInputs = ['search', 'status', 'industry', 'job_type'];
+    filterInputs.forEach(filterId => {
+        const element = document.getElementById(filterId);
+        if (element && element.value) {
+            filters.append(filterId, element.value);
+        }
+    });
+
+    window.location.href = `/admin-panel/jobs/export/?${filters.toString()}`;
+}
+
+// Auto-refresh for live updates (every 30 seconds)
+setInterval(function() {
+    // Only refresh if no modals are open and no bulk selection is active
+    const hasSelection = document.querySelectorAll('.job-checkbox:checked').length > 0;
+    if (!hasSelection && !document.querySelector('.modal')) {
+        const currentUrl = new URL(window.location);
+        fetch(currentUrl.href + (currentUrl.search ? '&' : '?') + 'ajax=1')
+            .then(response => response.json())
+            .then(data => {
+                // Update metrics cards
+                const totalJobsEl = document.querySelector('[data-stat="total-jobs"]');
+                const activeJobsEl = document.querySelector('[data-stat="active-jobs"]');
+                const totalAppsEl = document.querySelector('[data-stat="total-applications"]');
+                const avgAppsEl = document.querySelector('[data-stat="avg-applications"]');
+
+                if (totalJobsEl) totalJobsEl.textContent = data.total_jobs;
+                if (activeJobsEl) activeJobsEl.textContent = data.active_jobs;
+                if (totalAppsEl) totalAppsEl.textContent = data.total_applications;
+                if (avgAppsEl) avgAppsEl.textContent = data.avg_applications;
+            })
+            .catch(error => console.log('Auto-refresh failed:', error));
+    }
+}, 30000);
+</script>
+
+{% endblock %}

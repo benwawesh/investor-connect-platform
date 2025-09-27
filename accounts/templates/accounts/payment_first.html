@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Get Started - Investor Platform{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">Join InvestorConnect</h2>
+            <p class="text-gray-600 mt-2">Start connecting with investors today</p>
+        </div>
+        
+        <!-- Pricing -->
+        <div class="text-center mb-8 p-6 bg-blue-50 rounded-lg">
+            <h3 class="text-3xl font-bold text-blue-600 mb-2">KES 500</h3>
+            <p class="text-gray-600 mb-4">/month</p>
+            
+            <ul class="text-left space-y-3 mb-6">
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-3"></i>
+                    <span>Submit unlimited business pitches</span>
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-3"></i>
+                    <span>Connect with verified investors</span>
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-3"></i>
+                    <span>Real-time chat with interested investors</span>
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-3"></i>
+                    <span>Access to investor insights and tips</span>
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-3"></i>
+                    <span>24/7 platform access</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Process -->
+        <div class="mb-8">
+            <h4 class="text-lg font-semibold mb-4 text-center">How it works:</h4>
+            <div class="space-y-4">
+                <div class="flex items-center">
+                    <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4 font-bold">1</div>
+                    <span>Pay KES 500 via M-Pesa</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4 font-bold">2</div>
+                    <span>Create your account</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4 font-bold">3</div>
+                    <span>Wait for admin approval (24-48 hours)</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4 font-bold">4</div>
+                    <span>Start pitching to investors!</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center space-y-4">
+            <a href="{% url 'payments:subscribe' %}" 
+               class="block w-full bg-green-600 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-green-700 transition duration-200">
+                <i class="fas fa-mobile-alt mr-2"></i>Start with M-Pesa Payment
+            </a>
+            
+            <p class="text-sm text-gray-600">
+                Secure payment • No hidden fees • Cancel anytime
+            </p>
+            
+            <p class="text-gray-600">
+                Already paid? 
+                <a href="{% url 'accounts:create_account' %}" class="text-blue-600 hover:text-blue-800">Create your account</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

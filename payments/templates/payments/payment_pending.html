@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Pending - Investor Platform{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="text-center mb-6">
+            <div class="mb-4">
+                <i class="fas fa-mobile-alt fa-4x text-orange-500"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900">Payment Request Sent</h2>
+            <p class="text-gray-600 mt-2">Check your phone for M-Pesa prompt</p>
+        </div>
+        
+        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+            <h3 class="font-semibold text-orange-800">Next Steps:</h3>
+            <ol class="list-decimal list-inside text-orange-700 mt-2 space-y-1">
+                <li>Check your phone ({{ phone_number }})</li>
+                <li>Enter your M-Pesa PIN when prompted</li>
+                <li>Wait for confirmation SMS</li>
+                <li>Your account will be activated automatically</li>
+            </ol>
+        </div>
+        
+        <div class="text-center space-y-4">
+            <p class="text-sm text-gray-600">
+                <strong>Amount:</strong> KES {{ payment.amount }}<br>
+                <strong>Phone:</strong> {{ phone_number }}
+            </p>
+            
+            {% if payment.id %}
+            <div class="border-t pt-4">
+                <p class="text-xs text-gray-500 mb-2">For testing purposes only:</p>
+                <a href="{% url 'payments:simulate_payment_success' payment.id %}" 
+                   class="inline-block bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600">
+                    <i class="fas fa-check mr-1"></i>Simulate Payment Success
+                </a>
+            </div>
+            {% endif %}
+            
+            <div class="pt-4">
+                <a href="{% url 'accounts:dashboard' %}" class="text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-arrow-left mr-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit New Pitch{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h1 class="text-2xl font-bold text-gray-900">Submit New Pitch</h1>
+            <p class="text-gray-600 mt-2">Share your business idea with potential investors</p>
+        </div>
+        <div class="p-6">
+            <form method="post" enctype="multipart/form-data" id="pitchForm">
+                {% csrf_token %}
+                <div class="space-y-6">
+                    <!-- Basic Pitch Info -->
+                    <div>
+                        <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Pitch Title *
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.title.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Category *
+                        </label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.category.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Description *
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.description.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="{{ form.budget_required.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Budget Required (KES)
+                            </label>
+                            {{ form.budget_required }}
+                            {% if form.budget_required.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.budget_required.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.timeline.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Timeline
+                            </label>
+                            {{ form.timeline }}
+                            {% if form.timeline.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.timeline.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- File Upload Section -->
+                    <div class="border-t border-gray-200 pt-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Supporting Documents</h3>
+
+                        <div id="fileUploadSection">
+                            <div class="file-upload-item border border-gray-300 rounded-lg p-4 bg-gray-50">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">File</label>
+                                        <input type="file" name="files"
+                                               class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none"
+                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">File Type</label>
+                                        <select name="file_types" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="business_plan">Business Plan</option>
+                                            <option value="financial">Financial Documents</option>
+                                            <option value="image">Images/Screenshots</option>
+                                            <option value="prototype">Prototype Files</option>
+                                            <option value="presentation">Presentation</option>
+                                            <option value="other">Other Documents</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                        <input type="text" name="descriptions"
+                                               class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                               placeholder="Brief description">
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                        <button type="button" id="addMoreFiles"
+                                class="mt-3 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Add Another File
+                        </button>
+
+                        <div class="mt-4 text-sm text-gray-500">
+                            <p><strong>Supported formats:</strong> PDF, DOC, DOCX, JPG, PNG, PPT, PPTX, XLS, XLSX</p>
+                            <p><strong>Maximum file size:</strong> 10MB per file</p>
+                        </div>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="flex space-x-4 pt-6 border-t border-gray-200">
+                        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">
+                            <i class="fas fa-paper-plane mr-2"></i>Submit Pitch
+                        </button>
+                        <a href="{% url 'pitches:pitch_list' %}" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 transition">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let fileIndex = 0;
+
+    document.getElementById('addMoreFiles').addEventListener('click', function() {
+        fileIndex++;
+        const fileUploadSection = document.getElementById('fileUploadSection');
+        const newFileUpload = document.createElement('div');
+        newFileUpload.className = 'file-upload-item border border-gray-300 rounded-lg p-4 bg-gray-50 mt-3';
+        newFileUpload.innerHTML = `
+            <div class="flex justify-between items-start mb-3">
+                <h4 class="text-sm font-medium text-gray-700">Additional File</h4>
+                <button type="button" class="remove-file text-red-600 hover:text-red-800 text-sm">Remove</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">File</label>
+                    <input type="file" name="files"
+                           class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none"
+                           accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">File Type</label>
+                    <select name="file_types" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="business_plan">Business Plan</option>
+                        <option value="financial">Financial Documents</option>
+                        <option value="image">Images/Screenshots</option>
+                        <option value="prototype">Prototype Files</option>
+                        <option value="presentation">Presentation</option>
+                        <option value="other">Other Documents</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <input type="text" name="descriptions"
+                           class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="Brief description">
+                </div>
+            </div>
+
+
+        `;
+
+        fileUploadSection.appendChild(newFileUpload);
+
+        // Add remove functionality
+        newFileUpload.querySelector('.remove-file').addEventListener('click', function() {
+            newFileUpload.remove();
+        });
+    });
+});
+</script>
+{% endblock %}

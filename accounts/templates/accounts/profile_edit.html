@@ -1,0 +1,369 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Edit Profile</h1>
+            <p class="mt-1 text-sm text-gray-600">
+                Update your profile information to help others connect with you.
+            </p>
+
+            <!-- Privacy Information Banner -->
+            <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-info-circle text-blue-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-blue-800">Privacy Information</h3>
+                        <div class="mt-1 text-sm text-blue-700">
+                            {% if user.is_investor %}
+                                <p>Your contact information is private and only visible to platform administrators.</p>
+                            {% else %}
+                                <p>Your contact information is automatically shared with investors and administrators to facilitate connections.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Container -->
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Profile Picture Section -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Profile Picture</h2>
+                <div class="flex items-center space-x-6">
+                    <div class="flex-shrink-0">
+                        {% if user.userprofileextension.profile_picture %}
+                            <img id="profile-preview" src="{{ user.userprofileextension.profile_picture.url }}"
+                                 alt="Profile picture preview"
+                                 class="w-20 h-20 rounded-full object-cover border-4 border-blue-100">
+                        {% else %}
+                            <div id="profile-preview" class="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center border-4 border-blue-100">
+                                <i class="fas fa-user text-gray-500 text-xl"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <div class="mb-2">
+                            {{ profile_form.profile_picture.label_tag }}
+                        </div>
+                        {{ profile_form.profile_picture }}
+                        {% if profile_form.profile_picture.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ profile_form.profile_picture.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">
+                            Upload a clear photo of yourself. Recommended size: 400x400 pixels.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Basic Information -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-6">Basic Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Username -->
+                    <div>
+                        <label for="{{ user_form.username.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            {{ user_form.username.label }}
+                        </label>
+                        <div class="mt-1">
+                            {{ user_form.username }}
+                        </div>
+                        {% if user_form.username.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ user_form.username.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="{{ user_form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            {{ user_form.email.label }}
+                        </label>
+                        <div class="mt-1">
+                            {{ user_form.email }}
+                        </div>
+                        {% if user_form.email.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ user_form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Show full profile fields only for non-admin users -->
+                    {% if not user.is_staff %}
+                        <!-- First Name -->
+                        <div>
+                            <label for="{{ profile_form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                {{ profile_form.first_name.label }}
+                            </label>
+                            <div class="mt-1">
+                                {{ profile_form.first_name }}
+                            </div>
+                            {% if profile_form.first_name.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.first_name.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Last Name -->
+                        <div>
+                            <label for="{{ profile_form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                {{ profile_form.last_name.label }}
+                            </label>
+                            <div class="mt-1">
+                                {{ profile_form.last_name }}
+                            </div>
+                            {% if profile_form.last_name.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.last_name.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div>
+                            <label for="{{ user_form.phone_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                {{ user_form.phone_number.label }}
+                                {% if user.is_investor %}
+                                    <span class="text-xs text-red-600">(Admin Only)</span>
+                                {% else %}
+                                    <span class="text-xs text-blue-600">(Visible to Investors & Admins)</span>
+                                {% endif %}
+                            </label>
+                            <div class="mt-1">
+                                {{ user_form.phone_number }}
+                            </div>
+                            {% if user_form.phone_number.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ user_form.phone_number.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Job Title -->
+                        <div>
+                            <label for="{{ profile_form.job_title.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                {{ profile_form.job_title.label }}
+                            </label>
+                            <div class="mt-1">
+                                {{ profile_form.job_title }}
+                            </div>
+                            {% if profile_form.job_title.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.job_title.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Location -->
+                        <div>
+                            <label for="{{ profile_form.location.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                {{ profile_form.location.label }}
+                            </label>
+                            <div class="mt-1">
+                                {{ profile_form.location }}
+                            </div>
+                            {% if profile_form.location.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.location.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Company Name - Only for investors, marked as private -->
+                        {% if user.is_investor %}
+                        <div>
+                            <label for="{{ user_form.company_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                {{ user_form.company_name.label }} <span class="text-xs text-red-600">(Admin Only)</span>
+                            </label>
+                            <div class="mt-1">
+                                {{ user_form.company_name }}
+                            </div>
+                            {% if user_form.company_name.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ user_form.company_name.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">
+                                Only visible to platform administrators.
+                            </p>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <!-- Profile Description - Only for non-admin users -->
+                {% if not user.is_staff %}
+                <div class="mt-6">
+                    <label for="{{ user_form.profile_description.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ user_form.profile_description.label }}
+                    </label>
+                    <div class="mt-1">
+                        {{ user_form.profile_description }}
+                    </div>
+                    {% if user_form.profile_description.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ user_form.profile_description.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500">
+                        Tell others about yourself, your background, and what you're looking for.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Professional Information - Only for non-admin users -->
+            {% if not user.is_staff %}
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-6">Professional Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Industry -->
+                    <div>
+                        <label for="{{ profile_form.industry.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            {{ profile_form.industry.label }}
+                        </label>
+                        <div class="mt-1">
+                            {{ profile_form.industry }}
+                        </div>
+                        {% if profile_form.industry.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ profile_form.industry.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Experience Level -->
+                    <div>
+                        <label for="{{ profile_form.experience_level.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            {{ profile_form.experience_level.label }}
+                        </label>
+                        <div class="mt-1">
+                            {{ profile_form.experience_level }}
+                        </div>
+                        {% if profile_form.experience_level.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ profile_form.experience_level.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Role-specific fields -->
+                    {% if user.is_investor %}
+                        <!-- Investment Range -->
+                        <div>
+                            <label for="{{ profile_form.investment_range.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                {{ profile_form.investment_range.label }}
+                            </label>
+                            <div class="mt-1">
+                                {{ profile_form.investment_range }}
+                            </div>
+                            {% if profile_form.investment_range.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.investment_range.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Investment Focus -->
+                        <div>
+                            <label for="{{ profile_form.investment_focus.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                {{ profile_form.investment_focus.label }}
+                            </label>
+                            <div class="mt-1">
+                                {{ profile_form.investment_focus }}
+                            </div>
+                            {% if profile_form.investment_focus.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.investment_focus.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <!-- Business Stage -->
+                        <div>
+                            <label for="{{ profile_form.business_stage.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                {{ profile_form.business_stage.label }}
+                            </label>
+                            <div class="mt-1">
+                                {{ profile_form.business_stage }}
+                            </div>
+                            {% if profile_form.business_stage.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.business_stage.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Funding Goal -->
+                        <div>
+                            <label for="{{ profile_form.funding_goal.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                {{ profile_form.funding_goal.label }}
+                            </label>
+                            <div class="mt-1">
+                                {{ profile_form.funding_goal }}
+                            </div>
+                            {% if profile_form.funding_goal.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ profile_form.funding_goal.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Profile Visibility - Only for non-admin users -->
+            {% if not user.is_staff %}
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-6">Profile Visibility</h2>
+                <div>
+                    <label for="{{ profile_form.profile_visibility.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ profile_form.profile_visibility.label }}
+                    </label>
+                    <div class="mt-1">
+                        {{ profile_form.profile_visibility }}
+                    </div>
+                    {% if profile_form.profile_visibility.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ profile_form.profile_visibility.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500">
+                        Control who can discover and view your profile. Contact information privacy is handled automatically.
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <div class="flex items-center justify-between">
+                    <a href="{% url 'accounts:profile_view' %}"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-arrow-left mr-2"></i>Cancel
+                    </a>
+
+                    <button type="submit"
+                            class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-save mr-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Profile picture preview
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.querySelector('input[type="file"]');
+    const preview = document.getElementById('profile-preview');
+
+    if (fileInput && preview) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (preview.tagName === 'IMG') {
+                        preview.src = e.target.result;
+                    } else {
+                        // Replace the div with an img element
+                        const newImg = document.createElement('img');
+                        newImg.id = 'profile-preview';
+                        newImg.src = e.target.result;
+                        newImg.alt = 'Profile picture preview';
+                        newImg.className = 'w-20 h-20 rounded-full object-cover border-4 border-blue-100';
+                        preview.parentNode.replaceChild(newImg, preview);
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+    <p class="text-gray-600 mt-2">Manage your investor platform</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-yellow-100">
+                <i class="fas fa-clock text-yellow-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">{{ pending_pitches }}</h3>
+                <p class="text-gray-600">Pending Pitches</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-blue-100">
+                <i class="fas fa-user-clock text-blue-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">{{ pending_users }}</h3>
+                <p class="text-gray-600">Pending Users</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-green-100">
+                <i class="fas fa-users text-green-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">{{ total_users }}</h3>
+                <p class="text-gray-600">Total Users</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-purple-100">
+                <i class="fas fa-tags text-purple-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">{{ total_categories }}</h3>
+                <p class="text-gray-600">Categories</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="bg-white rounded-lg shadow mb-8">
+    <div class="p-6 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">Quick Actions</h2>
+    </div>
+    <div class="p-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a href="{% url 'admin_panel:manage_categories' %}" 
+               class="bg-blue-500 text-white px-4 py-3 rounded-lg text-center hover:bg-blue-600 transition">
+                <i class="fas fa-tags block mb-2"></i>
+                Manage Categories
+            </a>
+            <a href="{% url 'admin_panel:user_management' %}" 
+               class="bg-green-500 text-white px-4 py-3 rounded-lg text-center hover:bg-green-600 transition">
+                <i class="fas fa-users block mb-2"></i>
+                Manage Users
+            </a>
+            <a href="{% url 'admin_panel:pitch_management' %}" 
+               class="bg-yellow-500 text-white px-4 py-3 rounded-lg text-center hover:bg-yellow-600 transition">
+                <i class="fas fa-lightbulb block mb-2"></i>
+                Review Pitches
+            </a>
+            <a href="{% url 'admin_panel:payment_management' %}" 
+               class="bg-purple-500 text-white px-4 py-3 rounded-lg text-center hover:bg-purple-600 transition">
+                <i class="fas fa-dollar-sign block mb-2"></i>
+                View Payments
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">Recent Pitches</h2>
+        </div>
+        <div class="p-6">
+            {% for pitch in recent_pitches %}
+            <div class="flex justify-between items-center py-3 {% if not forloop.last %}border-b border-gray-100{% endif %}">
+                <div>
+                    <h4 class="font-medium text-gray-900">{{ pitch.title }}</h4>
+                    <p class="text-sm text-gray-600">by {{ pitch.user.username }}</p>
+                </div>
+                <div class="text-right">
+                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Pending</span>
+                    <p class="text-xs text-gray-500 mt-1">{{ pitch.submitted_at|timesince }} ago</p>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-gray-500 text-center py-4">No pending pitches</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">Recent Payments</h2>
+        </div>
+        <div class="p-6">
+            {% for payment in recent_payments %}
+            <div class="flex justify-between items-center py-3 {% if not forloop.last %}border-b border-gray-100{% endif %}">
+                <div>
+                    <h4 class="font-medium text-gray-900">{{ payment.user.username }}</h4>
+                    <p class="text-sm text-gray-600">KES {{ payment.amount }}</p>
+                </div>
+                <div class="text-right">
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Completed</span>
+                    <p class="text-xs text-gray-500 mt-1">{{ payment.payment_date|timesince }} ago</p>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-gray-500 text-center py-4">No recent payments</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

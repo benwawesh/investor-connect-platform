@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: investor_platform
+      POSTGRES_USER: investor_user
+      POSTGRES_PASSWORD: "@Benson100"
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             uvicorn investor_platform.asgi:application --host 0.0.0.0 --port 8080"
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    ports:
+      - "8080:8080"
+    environment:
+      - DEBUG=True
+      - DB_NAME=investor_platform
+      - DB_USER=investor_user
+      - DB_PASSWORD=@Benson100
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:

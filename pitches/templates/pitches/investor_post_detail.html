@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - InvestorConnect{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8 px-4">
+    <!-- Back Button -->
+    <a href="{% url 'pitches:investor_posts_feed' %}" 
+       class="text-blue-600 hover:text-blue-800 mb-6 inline-block">
+        ← Back to Investor Posts
+    </a>
+
+    <!-- Post Header -->
+    <article class="bg-white rounded-lg shadow overflow-hidden">
+        {% if post.featured_image %}
+        <div class="w-full max-h-96 overflow-hidden bg-gray-100">
+            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}"
+                 class="w-full h-auto object-contain">
+        </div>
+        {% endif %}
+        
+        <div class="p-8">
+            <!-- Post Meta -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center space-x-4">
+                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                        {{ post.get_post_type_display }}
+                    </span>
+                    {% if post.is_featured %}
+                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium">
+                        Featured
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <div class="text-sm text-gray-500">
+                    {{ post.read_count }} read{{ post.read_count|pluralize }}
+                </div>
+            </div>
+
+            <!-- Title -->
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ post.title }}</h1>
+
+            <!-- Author and Date -->
+            <div class="flex items-center justify-between text-sm text-gray-600 mb-6 pb-6 border-b border-gray-200">
+                <div class="flex items-center space-x-4">
+                    <span class="font-medium text-gray-900">{{ post.investor.username }}</span>
+                    <span>•</span>
+                    <span>{{ post.created_at|date:"F d, Y" }}</span>
+                    {% if post.updated_at != post.created_at %}
+                    <span>•</span>
+                    <span>Updated {{ post.updated_at|date:"M d, Y" }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="prose max-w-none">
+                <div class="text-gray-700 text-lg leading-relaxed whitespace-pre-line">
+                    {{ post.content }}
+                </div>
+            </div>
+
+            <!-- Tags -->
+            {% if post.get_tags_list %}
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <h3 class="text-sm font-medium text-gray-900 mb-3">Tags</h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for tag in post.get_tags_list %}
+                    <a href="{% url 'pitches:investor_posts_feed' %}?tag={{ tag }}" 
+                       class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors">
+                        {{ tag }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div class="flex space-x-4">
+                        {% if user == post.investor %}
+                        <a href="#" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            Edit Post
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.is_staff %}
+                        <form method="post" action="#" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="text-yellow-600 hover:text-yellow-800 text-sm font-medium">
+                                {% if post.is_featured %}Remove from Featured{% else %}Feature Post{% endif %}
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex space-x-4 text-sm text-gray-500">
+                        <span>Share:</span>
+                        <a href="#" class="text-blue-600 hover:text-blue-800">LinkedIn</a>
+                        <a href="#" class="text-blue-600 hover:text-blue-800">Twitter</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <!-- Related Posts -->
+    <div class="mt-12">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">More from {{ post.investor.username }}</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+            {% for related_post in post.investor.posts.all|slice:":2" %}
+                {% if related_post.id != post.id %}
+                <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
+                        {{ related_post.get_post_type_display }}
+                    </span>
+                    <h3 class="font-semibold text-gray-900 mt-3 mb-2">
+                        <a href="{% url 'pitches:investor_post_detail' related_post.id %}" 
+                           class="hover:text-blue-600">
+                            {{ related_post.title }}
+                        </a>
+                    </h3>
+                    <p class="text-gray-600 text-sm">{{ related_post.content|truncatewords:15 }}</p>
+                    <div class="text-xs text-gray-500 mt-3">
+                        {{ related_post.created_at|date:"M d, Y" }}
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

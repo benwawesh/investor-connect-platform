@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>TEST CHAT ROOM</h1>
+<p>Room ID: {{ chat_room.id }}</p>
+<p>Users: {{ chat_room.investor.username }} and {{ chat_room.regular_user.username }}</p>
+{% endblock %}

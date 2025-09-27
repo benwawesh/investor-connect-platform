@@ -1,0 +1,528 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ job.title }} at {{ job.company_name }} - InvestorConnect{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-8" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'jobs:job_list' %}" class="text-gray-700 hover:text-gray-900 inline-flex items-center">
+                    <i class="fas fa-briefcase mr-2"></i>
+                    Jobs
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-3"></i>
+                    <span class="text-gray-500">{{ job.title|truncatechars:50 }}</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2">
+            <!-- Job Header -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ job.title }}</h1>
+                        <h2 class="text-xl text-gray-700 mb-4">{{ job.company_name }}</h2>
+                        
+                        <!-- Job Meta -->
+                        <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-4">
+                            <span class="flex items-center">
+                                <i class="fas fa-map-marker-alt mr-2"></i>
+                                {{ job.location }}
+                                {% if job.remote_ok %}
+                                    <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Remote OK</span>
+                                {% endif %}
+                            </span>
+                            
+                            <span class="flex items-center">
+                                <i class="fas fa-briefcase mr-2"></i>
+                                {{ job.get_job_type_display }}
+                            </span>
+                            
+                            <span class="flex items-center">
+                                <i class="fas fa-layer-group mr-2"></i>
+                                {{ job.get_experience_level_display }}
+                            </span>
+                            
+                            <span class="flex items-center">
+                                <i class="fas fa-industry mr-2"></i>
+                                {{ job.get_industry_display }}
+                            </span>
+                        </div>
+
+                        <!-- Salary -->
+                        {% if job.get_salary_range != "Salary not specified" %}
+                        <div class="mb-4">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-dollar-sign mr-2"></i>
+                                {{ job.get_salary_range }}
+                                {% if job.equity_offered %}
+                                    <span class="ml-2 px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">+ Equity</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+
+                        <!-- Posted Date -->
+                        <p class="text-sm text-gray-500">Posted {{ job.created_at|timesince }} ago • {{ job.views_count }} view{{ job.views_count|pluralize }} • {{ job.applications_count }} applicant{{ job.applications_count|pluralize }}</p>
+                    </div>
+
+                    <!-- Save Job Button (for job seekers) -->
+                    {% if user.is_job_seeker %}
+                    <div class="ml-4">
+                        <button onclick="toggleSaveJob('{{ job.id }}')" 
+                                id="save-btn-{{ job.id }}"
+                                class="p-3 text-gray-400 hover:text-red-500 transition-colors border border-gray-300 rounded-lg">
+                            <i class="fas fa-heart text-xl {% if user_saved %}text-red-500{% endif %}"></i>
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Application Deadline -->
+                {% if job.application_deadline %}
+                <div class="{% if job.is_deadline_passed %}bg-red-50 border border-red-200{% else %}bg-yellow-50 border border-yellow-200{% endif %} rounded-lg p-4 mb-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-clock {% if job.is_deadline_passed %}text-red-600{% else %}text-yellow-600{% endif %} mr-2"></i>
+                        <span class="{% if job.is_deadline_passed %}text-red-800{% else %}text-yellow-800{% endif %} font-medium">
+                            {% if job.is_deadline_passed %}
+                                Application deadline has passed
+                            {% else %}
+                                Application deadline: {{ job.application_deadline|date:"F j, Y g:i A" }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Job Description -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Job Description</h3>
+                <div class="prose max-w-none">
+                    {{ job.description|linebreaks }}
+                </div>
+            </div>
+
+            <!-- Requirements -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Requirements</h3>
+                <div class="prose max-w-none">
+                    {{ job.requirements|linebreaks }}
+                </div>
+            </div>
+
+            <!-- Responsibilities (if provided) -->
+            {% if job.responsibilities %}
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Responsibilities</h3>
+                <div class="prose max-w-none">
+                    {{ job.responsibilities|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Skills Required -->
+            {% if skills_list %}
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Skills Required</h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for skill in skills_list %}
+                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                        {{ skill }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Benefits (if provided) -->
+            {% if job.benefits %}
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Benefits & Perks</h3>
+                <div class="prose max-w-none">
+                    {{ job.benefits|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Company Description (if provided) -->
+            {% if job.company_description %}
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">About {{ job.company_name }}</h3>
+                <div class="prose max-w-none">
+                    {{ job.company_description|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <!-- Application Card -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6 sticky top-6">
+                {% if user.is_authenticated %}
+                    {% if user.is_job_seeker %}
+                        {% if user.can_access_platform %}
+                            {% if user_applied %}
+                                <div class="text-center mb-4">
+                                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <i class="fas fa-check text-green-600 text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Application Submitted</h3>
+                                    <p class="text-sm text-gray-600">You've already applied for this position.</p>
+                                </div>
+                                <a href="{% url 'jobs:my_applications' %}" 
+                                   class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                    <i class="fas fa-list mr-2"></i>
+                                    View My Applications
+                                </a>
+                            {% elif job.is_deadline_passed %}
+                                <div class="text-center mb-4">
+                                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <i class="fas fa-clock text-red-600 text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Application Closed</h3>
+                                    <p class="text-sm text-gray-600">The application deadline for this job has passed.</p>
+                                </div>
+                                <button disabled 
+                                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-400 bg-gray-100 cursor-not-allowed">
+                                    Application Closed
+                                </button>
+                            {% else %}
+                                <div class="text-center mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Ready to Apply?</h3>
+                                    <p class="text-sm text-gray-600">Take the next step in your career journey.</p>
+                                </div>
+                                <a href="{% url 'jobs:apply_job' job.id %}" 
+                                   class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 mb-3">
+                                    <i class="fas fa-paper-plane mr-2"></i>
+                                    Apply Now
+                                </a>
+                                
+                                <!-- Save Job -->
+                                <button onclick="toggleSaveJob('{{ job.id }}')" 
+                                        id="save-btn-sidebar-{{ job.id }}"
+                                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                    <i class="fas fa-heart mr-2 {% if user_saved %}text-red-500{% endif %}"></i>
+                                    {% if user_saved %}Saved{% else %}Save Job{% endif %}
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <div class="text-center mb-4">
+                                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="fas fa-lock text-yellow-600 text-2xl"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Access Required</h3>
+                                <p class="text-sm text-gray-600">Complete your profile verification to apply for jobs.</p>
+                            </div>
+                            <a href="{% url 'accounts:dashboard' %}" 
+                               class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700">
+                                Complete Setup
+                            </a>
+                        {% endif %}
+                    {% elif user.can_post_jobs %}
+                        <!-- For employers viewing jobs -->
+                        <div class="text-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Employer View</h3>
+                            <p class="text-sm text-gray-600">You're viewing this as an employer.</p>
+                        </div>
+                        
+                        {% if job.poster == user %}
+                            <a href="{% url 'jobs:edit_job' job.id %}" 
+                               class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 mb-3">
+                                <i class="fas fa-edit mr-2"></i>
+                                Edit Job
+                            </a>
+                        {% else %}
+                            <a href="{% url 'jobs:post_job' %}" 
+                               class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                                <i class="fas fa-plus mr-2"></i>
+                                Post Your Own Job
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <!-- For other user types -->
+                        <div class="text-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Interested in Jobs?</h3>
+                            <p class="text-sm text-gray-600">Create a job seeker account to apply for positions.</p>
+                        </div>
+                        <a href="{% url 'accounts:signup_with_payment' %}"
+                           class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                            Create Account
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <!-- Not authenticated -->
+                    <div class="text-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Ready to Apply?</h3>
+                        <p class="text-sm text-gray-600">Sign in or create an account to apply for this job.</p>
+                    </div>
+                    <a href="{% url 'accounts:login' %}?next={{ request.path }}"
+                       class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 mb-3">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Sign In to Apply
+                    </a>
+                    <a href="{% url 'accounts:signup_with_payment' %}"
+                       class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Create Account
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Job Summary Card -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Job Summary</h3>
+                <dl class="space-y-3">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Job Type</dt>
+                        <dd class="text-sm text-gray-900">{{ job.get_job_type_display }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Experience Level</dt>
+                        <dd class="text-sm text-gray-900">{{ job.get_experience_level_display }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Industry</dt>
+                        <dd class="text-sm text-gray-900">{{ job.get_industry_display }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Location</dt>
+                        <dd class="text-sm text-gray-900">
+                            {{ job.location }}
+                            {% if job.remote_ok %}
+                                <span class="ml-1 text-green-600">(Remote OK)</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    {% if job.get_salary_range != "Salary not specified" %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Salary</dt>
+                        <dd class="text-sm text-gray-900">
+                            {{ job.get_salary_range }}
+                            {% if job.equity_offered %}
+                                <span class="text-purple-600">+ Equity</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    {% endif %}
+                    {% if job.application_deadline %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Application Deadline</dt>
+                        <dd class="text-sm text-gray-900">{{ job.application_deadline|date:"M j, Y" }}</dd>
+                    </div>
+                    {% endif %}
+                </dl>
+            </div>
+
+            <!-- Employer Info Card -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">About the Employer</h3>
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        {% if job.poster.userprofileextension.profile_picture %}
+                            <img class="h-12 w-12 rounded-full object-cover" 
+                                 src="{{ job.poster.userprofileextension.profile_picture.url }}" 
+                                 alt="{{ job.poster.get_full_name }}">
+                        {% else %}
+                            <div class="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center">
+                                <i class="fas fa-user text-gray-600"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-sm font-medium text-gray-900">
+                            {% if job.poster.userprofileextension %}
+                                {{ job.poster.userprofileextension.get_display_name }}
+                            {% else %}
+                                {{ job.poster.username }}
+                            {% endif %}
+                        </h4>
+                        <p class="text-sm text-gray-600">
+                            {% if job.poster.is_investor %}
+                                Investor
+                            {% else %}
+                                Entrepreneur
+                            {% endif %}
+                        </p>
+                        {% if job.poster.userprofileextension.location %}
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-map-marker-alt mr-1"></i>
+                            {{ job.poster.userprofileextension.location }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Contact Employer (for job seekers) -->
+                {% if user.is_job_seeker and user.can_access_platform %}
+                <div class="mt-4">
+                    <a href="{% url 'chat:start_chat' username=job.poster.username %}"
+                       class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="fas fa-comments mr-2"></i>
+                        Message Employer
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Share Job Card -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Share this Job</h3>
+                <div class="flex space-x-2">
+                    <button onclick="shareJob('twitter')" 
+                            class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="fab fa-twitter text-blue-400 mr-2"></i>
+                        Twitter
+                    </button>
+                    <button onclick="shareJob('linkedin')" 
+                            class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="fab fa-linkedin text-blue-600 mr-2"></i>
+                        LinkedIn
+                    </button>
+                    <button onclick="copyJobLink()" 
+                            class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="fas fa-copy mr-2"></i>
+                        Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Similar Jobs Section -->
+    <div class="mt-12">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Similar Jobs</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- This would be populated by a context variable with similar jobs -->
+            {% comment %}
+            {% for similar_job in similar_jobs %}
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                    <a href="{% url 'jobs:job_detail' similar_job.id %}" class="hover:text-indigo-600">
+                        {{ similar_job.title }}
+                    </a>
+                </h3>
+                <p class="text-gray-600 mb-2">{{ similar_job.company_name }}</p>
+                <p class="text-sm text-gray-500 mb-3">{{ similar_job.location }}</p>
+                <a href="{% url 'jobs:job_detail' similar_job.id %}" 
+                   class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-700">
+                    View Job <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+            {% endfor %}
+            {% endcomment %}
+            
+            <!-- Placeholder for now -->
+            <div class="bg-gray-50 rounded-lg p-6 text-center">
+                <i class="fas fa-search text-gray-400 text-2xl mb-2"></i>
+                <p class="text-gray-600">More job recommendations coming soon!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Save/unsave job functionality
+function toggleSaveJob(jobId) {
+    const btns = document.querySelectorAll(`[id^="save-btn"]`);
+    
+    btns.forEach(btn => {
+        const icon = btn.querySelector('i');
+        const isSaved = icon.classList.contains('text-red-500');
+        
+        if (isSaved) {
+            icon.classList.remove('text-red-500');
+            icon.classList.add('text-gray-400');
+        } else {
+            icon.classList.remove('text-gray-400');
+            icon.classList.add('text-red-500');
+        }
+    });
+    
+    // Make AJAX request
+    const isSaved = document.querySelector(`#save-btn-${jobId} i`).classList.contains('text-red-500');
+    const url = isSaved ? `/jobs/${jobId}/save/` : `/jobs/${jobId}/unsave/`;
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.message);
+        // Update sidebar button text
+        const sidebarBtn = document.querySelector('#save-btn-sidebar-{{ job.id }}');
+        if (sidebarBtn) {
+            const btnText = sidebarBtn.querySelector('span') || sidebarBtn;
+            btnText.textContent = isSaved ? 'Saved' : 'Save Job';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Revert on error
+        btns.forEach(btn => {
+            const icon = btn.querySelector('i');
+            if (isSaved) {
+                icon.classList.remove('text-red-500');
+                icon.classList.add('text-gray-400');
+            } else {
+                icon.classList.remove('text-gray-400');
+                icon.classList.add('text-red-500');
+            }
+        });
+    });
+}
+
+// Share job functionality
+function shareJob(platform) {
+    const jobTitle = "{{ job.title|escapejs }}";
+    const companyName = "{{ job.company_name|escapejs }}";
+    const jobUrl = window.location.href;
+    
+    let shareUrl = '';
+    const text = `Check out this job opportunity: ${jobTitle} at ${companyName}`;
+    
+    switch (platform) {
+        case 'twitter':
+            shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(jobUrl)}`;
+            break;
+        case 'linkedin':
+            shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(jobUrl)}`;
+            break;
+    }
+    
+    if (shareUrl) {
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+}
+
+// Copy job link
+function copyJobLink() {
+    navigator.clipboard.writeText(window.location.href).then(function() {
+        // Show success feedback (you could implement a toast notification here)
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
+        btn.classList.add('text-green-600');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('text-green-600');
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

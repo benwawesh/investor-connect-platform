@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ pitch.title }} - InvestorConnect{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8 px-4">
+    <!-- Back Button -->
+    <a href="{% if user.user_type == 'investor' %}{% url 'pitches:investor_pitch_list' %}{% else %}{% url 'accounts:dashboard' %}{% endif %}"
+       class="text-blue-600 hover:text-blue-800 mb-4 inline-block">
+        ← Back to {{ user.user_type|capfirst }} Dashboard
+    </a>
+
+    <!-- Pitch Header -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <!-- Status Badge -->
+        <div class="mb-4">
+            <span class="px-3 py-1 rounded-full text-sm font-medium
+                {% if pitch.status == 'approved' %}bg-green-100 text-green-800
+                {% elif pitch.status == 'rejected' %}bg-red-100 text-red-800
+                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                {{ pitch.get_status_display|capfirst }}
+            </span>
+        </div>
+
+        <!-- Title and Info -->
+        <h1 class="text-3xl font-bold mb-4">{{ pitch.title }}</h1>
+        <div class="flex items-center text-gray-600 mb-4">
+            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm mr-4">
+                {{ pitch.category.name }}
+            </span>
+            <span>by {{ pitch.user.username }}</span>
+            <span class="ml-4">{{ pitch.submitted_at|date:"M d, Y" }}</span>
+        </div>
+
+        <!-- Interest Count (visible to all) -->
+        {% if pitch.status == 'approved' %}
+        <div class="bg-gray-50 rounded-lg p-3 mb-4">
+            <div class="flex items-center text-sm">
+                <svg class="w-4 h-4 text-red-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="font-medium text-gray-700">
+                    {{ pitch.interested_investors.count }} investor{{ pitch.interested_investors.count|pluralize }} interested
+                </span>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Description -->
+        <div class="prose max-w-none">
+            <h3 class="text-lg font-semibold mb-2">Description</h3>
+            <p class="text-gray-700 whitespace-pre-line">{{ pitch.description }}</p>
+        </div>
+
+        <!-- Additional Details -->
+        {% if pitch.budget_required or pitch.timeline %}
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% if pitch.budget_required %}
+            <div class="bg-blue-50 rounded-lg p-4">
+                <h4 class="font-semibold text-blue-900">Budget Required</h4>
+                <p class="text-blue-700">KES {{ pitch.budget_required|floatformat:0 }}</p>
+            </div>
+            {% endif %}
+
+            {% if pitch.timeline %}
+            <div class="bg-green-50 rounded-lg p-4">
+                <h4 class="font-semibold text-green-900">Timeline</h4>
+                <p class="text-green-700">{{ pitch.timeline }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Contact Info (only for approved pitches and investors) -->
+    {% if pitch.status == 'approved' and user.user_type == 'investor' %}
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 class="text-lg font-semibold mb-4">Contact Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <span class="block text-sm font-medium text-gray-500">Email</span>
+                <span class="text-gray-900">{{ pitch.user.email }}</span>
+            </div>
+            {% if pitch.user.phone_number %}
+            <div>
+                <span class="block text-sm font-medium text-gray-500">Phone</span>
+                <span class="text-gray-900">{{ pitch.user.phone_number }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Files Section (for interested investors and pitch owner) -->
+    {% if pitch.files.exists and user_can_view_files %}
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 class="text-lg font-semibold mb-4">Attached Files</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for file in pitch.files.all %}
+            <div class="border rounded-lg p-4 hover:bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <h4 class="font-medium text-gray-900">{{ file.original_name }}</h4>
+                        <p class="text-sm text-gray-500">{{ file.get_file_type_display }} • {{ file.file_size|filesizeformat }}</p>
+                        <p class="text-xs text-gray-400">{{ file.uploaded_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                    <a href="{% url 'pitches:download_file' file.id %}"
+                       class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                        Download
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Interested Investors (only visible to pitch owner and admins) -->
+    {% if pitch.interested_investors.exists and user == pitch.user or user.is_staff %}
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 class="text-lg font-semibold mb-4">Interested Investors</h3>
+        <div class="space-y-3">
+            {% for interest in pitch.interested_investors.all %}
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                    <span class="font-medium text-gray-900">{{ interest.investor.username }}</span>
+                    <span class="text-sm text-gray-500 ml-2">{{ interest.investor.email }}</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="text-sm text-gray-500">{{ interest.created_at|date:"M d, Y" }}</span>
+                    <!-- Chat link for pitch owner -->
+                    {% if user == pitch.user %}
+                        {% for room in user_chat_rooms %}
+                            {% if room.investor == interest.investor and room.related_pitch == pitch %}
+                                <a href="{% url 'chat:chat_room' room.id %}"
+                                   class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm inline-flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.436L3 21l2.436-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"></path>
+                                    </svg>
+                                    Chat
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="flex flex-wrap gap-4">
+        <!-- Interest Buttons (Only for investors on approved pitches) -->
+        {% if user.user_type == 'investor' and pitch.status == 'approved' %}
+            {% if user_has_interest %}
+                <form method="post" action="{% url 'pitches:remove_interest' pitch.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors inline-flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"></path>
+                        </svg>
+                        Remove Interest
+                    </button>
+                </form>
+
+                <!-- Chat Button - Only show if user has expressed interest -->
+                {% if chat_room %}
+                    <a href="{% url 'chat:chat_room' chat_room.id %}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors inline-flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.436L3 21l2.436-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"></path>
+                        </svg>
+                        Continue Chat
+                        {% if unread_count > 0 %}
+                            <span class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">{{ unread_count }}</span>
+                        {% endif %}
+                    </a>
+                {% else %}
+                    <!-- Chat room doesn't exist yet - this shouldn't happen if interest system works correctly -->
+                    <span class="bg-gray-400 text-white px-6 py-2 rounded-lg inline-flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.436L3 21l2.436-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"></path>
+                        </svg>
+                        Chat Loading...
+                    </span>
+                {% endif %}
+            {% else %}
+                <form method="post" action="{% url 'pitches:add_interest' pitch.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors inline-flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                        </svg>
+                        Express Interest
+                    </button>
+                </form>
+            {% endif %}
+        {% endif %}
+
+        <!-- Edit Button (Only for pitch owner on pending pitches) -->
+        {% if user == pitch.user and pitch.status == 'pending' %}
+            <a href="#" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg transition-colors inline-flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Edit Pitch
+            </a>
+        {% endif %}
+
+        <!-- View All Chats Button (for pitch owners who have interested investors) -->
+        {% if user == pitch.user and pitch.interested_investors.exists %}
+            <a href="{% url 'chat:chat_list' %}" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors inline-flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2v-6a2 2 0 012-2h2m-2-4h6a2 2 0 012 2v6a2 2 0 01-2 2H9l-4 4V8a2 2 0 012-2z"></path>
+                </svg>
+                View All Chats
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

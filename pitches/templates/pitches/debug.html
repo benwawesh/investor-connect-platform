@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8 px-4">
+    <h1>Debug: User Pitches</h1>
+    <p><strong>Current User:</strong> {{ current_user.username }} (ID: {{ current_user.id }})</p>
+    <p><strong>User Pitches Count:</strong> {{ user_pitches_count }}</p>
+    
+    <h2>User's Pitches:</h2>
+    {% for pitch in user_pitches %}
+        <div class="bg-gray-100 p-4 mb-2 rounded">
+            <p><strong>Title:</strong> {{ pitch.title }}</p>
+            <p><strong>Status:</strong> {{ pitch.status }}</p>
+            <p><strong>Owner:</strong> {{ pitch.user.username }} (ID: {{ pitch.user.id }})</p>
+        </div>
+    {% empty %}
+        <p>No pitches found for this user.</p>
+    {% endfor %}
+    
+    <h2>All Pitches:</h2>
+    {% for pitch in all_pitches %}
+        <div class="bg-blue-100 p-4 mb-2 rounded">
+            <p><strong>Title:</strong> {{ pitch.title }}</p>
+            <p><strong>Owner:</strong> {{ pitch.user.username }} (ID: {{ pitch.user.id }})</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

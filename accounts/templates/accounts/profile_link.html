@@ -1,0 +1,17 @@
+<a href="{{ profile_url }}" class="inline-flex items-center hover:text-blue-600 transition-colors {{ css_class }}">
+    {% if show_avatar and user.userprofileextension.profile_picture %}
+        <img src="{{ user.userprofileextension.profile_picture.url }}"
+             alt="{{ user.username }}"
+             class="w-6 h-6 rounded-full mr-2 object-cover">
+    {% elif show_avatar %}
+        <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center mr-2">
+            <span class="text-xs text-gray-600">{{ user.username|first|upper }}</span>
+        </div>
+    {% endif %}
+    <span class="font-medium">{{ text }}</span>
+    {% if user.is_investor %}
+        <i class="fas fa-coins text-green-600 ml-1 text-xs"></i>
+    {% else %}
+        <i class="fas fa-lightbulb text-blue-600 ml-1 text-xs"></i>
+    {% endif %}
+</a>

@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notification Settings{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Notification Settings</h1>
+            <p class="mt-1 text-sm text-gray-600">
+                Choose how and when you want to receive notifications about platform activities.
+            </p>
+        </div>
+
+        <!-- Form Container -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Email Notifications -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-medium text-gray-900 flex items-center">
+                        <i class="fas fa-envelope text-blue-600 mr-3"></i>
+                        Email Notifications
+                    </h2>
+                    <p class="mt-1 text-sm text-gray-600">
+                        Receive notifications via email to stay updated even when you're not on the platform.
+                    </p>
+                </div>
+                
+                <div class="px-6 py-4 space-y-4">
+                    <!-- New Messages -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.email_new_messages }}
+                        </div>
+                        <div class="ml-3">
+                            <label for="{{ form.email_new_messages.id_for_label }}" class="text-sm font-medium text-gray-700">
+                                {{ form.email_new_messages.label }}
+                            </label>
+                            <p class="text-sm text-gray-500">Get notified when you receive new chat messages</p>
+                        </div>
+                    </div>
+
+                    <!-- Pitch Interest -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.email_pitch_interest }}
+                        </div>
+                        <div class="ml-3">
+                            <label for="{{ form.email_pitch_interest.id_for_label }}" class="text-sm font-medium text-gray-700">
+                                {{ form.email_pitch_interest.label }}
+                            </label>
+                            <p class="text-sm text-gray-500">
+                                {% if user.is_investor %}
+                                    Get notified when new pitches match your interests
+                                {% else %}
+                                    Get notified when investors show interest in your pitches
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Pitch Approved -->
+                    {% if not user.is_investor %}
+                        <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                {{ form.email_pitch_approved }}
+                            </div>
+                            <div class="ml-3">
+                                <label for="{{ form.email_pitch_approved.id_for_label }}" class="text-sm font-medium text-gray-700">
+                                    {{ form.email_pitch_approved.label }}
+                                </label>
+                                <p class="text-sm text-gray-500">Get notified when your pitches are approved or rejected</p>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Weekly Digest -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.email_weekly_digest }}
+                        </div>
+                        <div class="ml-3">
+                            <label for="{{ form.email_weekly_digest.id_for_label }}" class="text-sm font-medium text-gray-700">
+                                {{ form.email_weekly_digest.label }}
+                            </label>
+                            <p class="text-sm text-gray-500">Receive a weekly summary of platform activities and opportunities</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Browser Notifications -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-medium text-gray-900 flex items-center">
+                        <i class="fas fa-desktop text-blue-600 mr-3"></i>
+                        Browser Notifications
+                    </h2>
+                    <p class="mt-1 text-sm text-gray-600">
+                        Get instant notifications in your browser when important events happen.
+                    </p>
+                </div>
+                
+                <div class="px-6 py-4 space-y-4">
+                    <!-- Browser permission status -->
+                    <div id="browser-permission-status" class="hidden">
+                        <div id="permission-granted" class="hidden bg-green-50 border border-green-200 rounded-md p-3">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-check-circle text-green-400"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-green-800">Browser notifications are enabled</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="permission-denied" class="hidden bg-red-50 border border-red-200 rounded-md p-3">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-times-circle text-red-400"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-red-800">Browser notifications are blocked. Please enable them in your browser settings.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="permission-default" class="hidden bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-yellow-800">
+                                        Browser notifications not configured. 
+                                        <button type="button" id="enable-notifications" class="font-medium text-yellow-900 underline hover:text-yellow-700">
+                                            Click here to enable
+                                        </button>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- New Messages -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.browser_new_messages }}
+                        </div>
+                        <div class="ml-3">
+                            <label for="{{ form.browser_new_messages.id_for_label }}" class="text-sm font-medium text-gray-700">
+                                {{ form.browser_new_messages.label }}
+                            </label>
+                            <p class="text-sm text-gray-500">Show browser notifications for new chat messages</p>
+                        </div>
+                    </div>
+
+                    <!-- Pitch Updates -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.browser_pitch_updates }}
+                        </div>
+                        <div class="ml-3">
+                            <label for="{{ form.browser_pitch_updates.id_for_label }}" class="text-sm font-medium text-gray-700">
+                                {{ form.browser_pitch_updates.label }}
+                            </label>
+                            <p class="text-sm text-gray-500">Show browser notifications for pitch-related updates</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SMS Notifications -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-medium text-gray-900 flex items-center">
+                        <i class="fas fa-mobile-alt text-blue-600 mr-3"></i>
+                        SMS Notifications
+                    </h2>
+                    <p class="mt-1 text-sm text-gray-600">
+                        Receive SMS notifications for critical updates (charges may apply).
+                    </p>
+                </div>
+                
+                <div class="px-6 py-4 space-y-4">
+                    <!-- Critical Updates -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.sms_critical_updates }}
+                        </div>
+                        <div class="ml-3">
+                            <label for="{{ form.sms_critical_updates.id_for_label }}" class="text-sm font-medium text-gray-700">
+                                {{ form.sms_critical_updates.label }}
+                            </label>
+                            <p class="text-sm text-gray-500">Receive SMS for critical account and security updates</p>
+                        </div>
+                    </div>
+
+                    {% if user.phone_number %}
+                        <div class="bg-blue-50 border border-blue-200 rounded-md p-3">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-info-circle text-blue-400"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-blue-800">
+                                        SMS notifications will be sent to: <strong>{{ user.phone_number }}</strong>
+                                    </p>
+                                    <p class="text-xs text-blue-600 mt-1">
+                                        <a href="{% url 'profile_edit' %}" class="underline">Update phone number</a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-yellow-800">
+                                        No phone number on file. 
+                                        <a href="{% url 'profile_edit' %}" class="font-medium text-yellow-900 underline">
+                                            Add a phone number
+                                        </a> to receive SMS notifications.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Notification Summary -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-medium text-gray-900 flex items-center">
+                        <i class="fas fa-chart-bar text-blue-600 mr-3"></i>
+                        Notification Summary
+                    </h2>
+                </div>
+                
+                <div class="px-6 py-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600" id="email-count">0</div>
+                            <div class="text-sm text-gray-500">Email Notifications</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600" id="browser-count">0</div>
+                            <div class="text-sm text-gray-500">Browser Notifications</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-600" id="sms-count">0</div>
+                            <div class="text-sm text-gray-500">SMS Notifications</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-gray-50 rounded-md">
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                            <strong>Tip:</strong> You can always adjust these settings later. We recommend keeping email notifications enabled to stay informed about important updates.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <div class="flex items-center justify-between">
+                    <a href="{% url 'profile_settings_menu' %}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Settings
+                    </a>
+                    
+                    <div class="flex space-x-3">
+                        <button type="button" 
+                                id="test-notifications"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-bell mr-2"></i>Test Notifications
+                        </button>
+                        
+                        <button type="submit" 
+                                class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-save mr-2"></i>Save Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check browser notification permission
+    function checkNotificationPermission() {
+        if ('Notification' in window) {
+            const status = document.getElementById('browser-permission-status');
+            status.classList.remove('hidden');
+            
+            if (Notification.permission === 'granted') {
+                document.getElementById('permission-granted').classList.remove('hidden');
+            } else if (Notification.permission === 'denied') {
+                document.getElementById('permission-denied').classList.remove('hidden');
+            } else {
+                document.getElementById('permission-default').classList.remove('hidden');
+            }
+        }
+    }
+    
+    // Enable browser notifications
+    document.getElementById('enable-notifications')?.addEventListener('click', function() {
+        if ('Notification' in window) {
+            Notification.requestPermission().then(function(permission) {
+                checkNotificationPermission();
+                if (permission === 'granted') {
+                    new Notification('InvestorConnect Platform', {
+                        body: 'Browser notifications are now enabled!',
+                        icon: '/static/images/favicon.ico'
+                    });
+                }
+            });
+        }
+    });
+    
+    // Count enabled notifications
+    function updateNotificationCounts() {
+        const emailInputs = document.querySelectorAll('input[name^="email_"]:checked');
+        const browserInputs = document.querySelectorAll('input[name^="browser_"]:checked');
+        const smsInputs = document.querySelectorAll('input[name^="sms_"]:checked');
+        
+        document.getElementById('email-count').textContent = emailInputs.length;
+        document.getElementById('browser-count').textContent = browserInputs.length;
+        document.getElementById('sms-count').textContent = smsInputs.length;
+    }
+    
+    // Test notifications
+    document.getElementById('test-notifications')?.addEventListener('click', function() {
+        // Test browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('InvestorConnect Platform', {
+                body: 'This is a test notification. Your settings are working!',
+                icon: '/static/images/favicon.ico'
+            });
+        }
+        
+        // Show feedback
+        const button = this;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check mr-2"></i>Test Sent!';
+        button.disabled = true;
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 3000);
+    });
+    
+    // Listen for checkbox changes
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updateNotificationCounts);
+    });
+    
+    // Initial setup
+    checkNotificationPermission();
+    updateNotificationCounts();
+});
+</script>
+{% endblock %}

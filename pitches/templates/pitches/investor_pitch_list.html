@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Pitches - InvestorConnect{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto mt-8 px-4">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Investment Opportunities</h1>
+        <p class="text-gray-600 mt-2">Discover and connect with promising entrepreneurs</p>
+    </div>
+
+    <!-- Back to Dashboard -->
+    <a href="{% url 'accounts:dashboard' %}" 
+       class="text-blue-600 hover:text-blue-800 mb-6 inline-block">
+        ← Back to Dashboard
+    </a>
+
+    <!-- Stats Bar -->
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-4 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <span class="text-2xl font-bold text-blue-600">{{ total_count }}</span>
+                <span class="text-gray-600 ml-2">approved pitches available</span>
+            </div>
+            <div class="text-sm text-gray-500">
+                Updated regularly
+            </div>
+        </div>
+    </div>
+
+    <!-- Pitches Grid -->
+    {% if pitches %}
+        <div class="grid gap-6">
+            {% for pitch in pitches %}
+            <div class="bg-white rounded-lg shadow border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                            <a href="{% url 'pitches:pitch_detail' pitch.id %}" 
+                               class="hover:text-blue-600">
+                                {{ pitch.title }}
+                            </a>
+                        </h3>
+                        
+                        <div class="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                {{ pitch.category.name }}
+                            </span>
+                            <span>by {{ pitch.user.username }}</span>
+                            <span>{{ pitch.submitted_at|date:"M d, Y" }}</span>
+                        </div>
+
+                        <p class="text-gray-700 mb-4">
+                            {{ pitch.description|truncatewords:40 }}
+                        </p>
+                    </div>
+
+                    <!-- Approved Badge -->
+                    <span class="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 ml-4">
+                        ✓ Approved
+                    </span>
+                </div>
+
+                <!-- Additional Info -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                        {% if pitch.budget_required %}
+                        <div>
+                            <span class="font-medium text-gray-700">Budget:</span>
+                            <span class="text-gray-600">KES {{ pitch.budget_required|floatformat:0 }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if pitch.timeline %}
+                        <div>
+                            <span class="font-medium text-gray-700">Timeline:</span>
+                            <span class="text-gray-600">{{ pitch.timeline }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div>
+                            <span class="font-medium text-gray-700">Interest:</span>
+                            <span class="text-gray-600">{{ pitch.interested_investors.count }} investor{{ pitch.interested_investors.count|pluralize }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+                    <div class="flex gap-3">
+                        <a href="{% url 'pitches:pitch_detail' pitch.id %}" 
+                           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+                            View Details
+                        </a>
+                        
+                        <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">
+                            Express Interest
+                        </button>
+                        
+                        <button class="border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 text-sm">
+                            Contact
+                        </button>
+                    </div>
+
+                    <div class="text-sm text-gray-500">
+                        {% if pitch.reviewed_at %}
+                            Approved {{ pitch.reviewed_at|timesince }} ago
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Load More (for future pagination) -->
+        <div class="text-center mt-8">
+            <button class="bg-gray-200 text-gray-700 px-6 py-2 rounded hover:bg-gray-300">
+                Load More Opportunities
+            </button>
+        </div>
+
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <div class="mx-auto h-24 w-24 text-gray-400 mb-4">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" 
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No approved pitches yet</h3>
+            <p class="text-gray-600">Check back soon for new investment opportunities.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

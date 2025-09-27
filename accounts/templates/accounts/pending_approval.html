@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Account Under Review - Investor Platform{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="text-center mb-6">
+            <div class="mb-4">
+                <i class="fas fa-hourglass-half fa-5x text-orange-500"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-orange-600">Account Under Review</h2>
+            <p class="text-gray-600 mt-2">Your account is being reviewed by our admin team</p>
+        </div>
+        
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="font-semibold text-blue-800 mb-2">What's Next?</h3>
+            <ul class="space-y-2 text-blue-700 text-sm">
+                <li><i class="fas fa-check text-green-500 mr-2"></i>Your payment has been processed</li>
+                <li><i class="fas fa-clock text-orange-500 mr-2"></i>Admin review is in progress</li>
+                <li><i class="fas fa-envelope text-blue-500 mr-2"></i>You'll receive email notification when approved</li>
+            </ul>
+        </div>
+        
+        <div class="text-center mt-6">
+            <p class="text-gray-600">This usually takes 24-48 hours.</p>
+            <p class="text-gray-600">Thank you for your patience!</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

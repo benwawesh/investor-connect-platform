@@ -1,0 +1,668 @@
+{% extends 'base.html' %}
+
+{% block title %}All Applications - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <nav class="flex mb-4" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <a href="{% url 'admin_panel:admin_dashboard' %}" class="text-gray-700 hover:text-gray-900">
+                        Admin Dashboard
+                    </a>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <i class="fas fa-chevron-right text-gray-400 mx-3"></i>
+                        <span class="text-gray-500">All Applications</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+        
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">All Job Applications</h1>
+                <p class="text-gray-600 mt-2">Manage applications across all job postings</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{% url 'admin_panel:job_management' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-briefcase mr-2"></i>
+                    Manage Jobs
+                </a>
+                <button onclick="exportAllApplications()" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-download mr-2"></i>
+                    Export All
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-file-alt text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Applications</dt>
+                            <dd class="text-2xl font-semibold text-gray-900">{{ total_applications|default:0 }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-clock text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Pending Review</dt>
+                            <dd class="text-2xl font-semibold text-gray-900">{{ pending_applications|default:0 }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-users text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Shortlisted</dt>
+                            <dd class="text-2xl font-semibold text-gray-900">{{ shortlisted_applications|default:0 }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-calendar-alt text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Interviews</dt>
+                            <dd class="text-2xl font-semibold text-gray-900">{{ interview_scheduled_applications|default:0 }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-user-check text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Hired</dt>
+                            <dd class="text-2xl font-semibold text-gray-900">{{ hired_applications|default:0 }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white shadow rounded-lg mb-6">
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Search -->
+                <div class="md:col-span-2">
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                    <div class="relative">
+                        <input type="text" id="search" name="search"
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                               placeholder="Search applicant name, email, or job title..." value="{{ search_query|default:'' }}">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="status" name="status"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">All Status</option>
+                        <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending Review</option>
+                        <option value="reviewing" {% if selected_status == 'reviewing' %}selected{% endif %}>Under Review</option>
+                        <option value="shortlisted" {% if selected_status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                        <option value="interview_scheduled" {% if selected_status == 'interview_scheduled' %}selected{% endif %}>Interview Scheduled</option>
+                        <option value="interview_completed" {% if selected_status == 'interview_completed' %}selected{% endif %}>Interview Completed</option>
+                        <option value="offer_made" {% if selected_status == 'offer_made' %}selected{% endif %}>Offer Made</option>
+                        <option value="rejected" {% if selected_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                        <option value="withdrawn" {% if selected_status == 'withdrawn' %}selected{% endif %}>Withdrawn</option>
+                        <option value="hired" {% if selected_status == 'hired' %}selected{% endif %}>Hired</option>
+                    </select>
+                </div>
+
+                <!-- Filter Actions -->
+                <div class="flex items-end space-x-2">
+                    <button onclick="applyFilters()"
+                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                        Apply Filters
+                    </button>
+                    <button onclick="clearFilters()"
+                            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-medium text-gray-900">All Applications</h3>
+                <span class="text-sm text-gray-700">{{ page_obj.paginator.count }} total applications</span>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Applicant
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Job Position
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Contact
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Applied Date
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for application in page_obj %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    {% if application.applicant.userprofileextension.profile_picture %}
+                                        <img class="h-10 w-10 rounded-full object-cover"
+                                             src="{{ application.applicant.userprofileextension.profile_picture.url }}"
+                                             alt="{{ application.applicant.get_full_name }}">
+                                    {% else %}
+                                        <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                            <span class="text-sm font-medium text-gray-700">
+                                                {{ application.applicant.first_name|first|default:application.applicant.username|first|upper }}
+                                            </span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ application.applicant.get_full_name|default:application.applicant.username }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        {{ application.applicant.get_user_type_display }}
+                                        {% if application.applicant.userprofileextension.location %}
+                                            • {{ application.applicant.userprofileextension.location }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900">{{ application.job_posting.title }}</div>
+                            <div class="text-sm text-gray-500">{{ application.job_posting.company_name }}</div>
+                            <a href="{% url 'admin_panel:job_applications' application.job_posting.id %}" 
+                               class="text-xs text-indigo-600 hover:text-indigo-900">
+                                View job applications →
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ application.applicant.email }}</div>
+                            {% if application.applicant.userprofileextension.phone %}
+                                <div class="text-sm text-gray-500">{{ application.applicant.userprofileextension.phone }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <select onchange="updateStatus('{{ application.id }}', this.value)"
+                                    class="status-select text-sm border border-gray-300 rounded px-2 py-1
+                                           {% if application.status == 'pending' %}bg-yellow-50 text-yellow-800
+                                           {% elif application.status == 'reviewing' %}bg-blue-50 text-blue-800
+                                           {% elif application.status == 'shortlisted' %}bg-purple-50 text-purple-800
+                                           {% elif application.status == 'interview_scheduled' %}bg-indigo-50 text-indigo-800
+                                           {% elif application.status == 'interview_completed' %}bg-indigo-50 text-indigo-800
+                                           {% elif application.status == 'offer_made' %}bg-green-50 text-green-800
+                                           {% elif application.status == 'hired' %}bg-green-50 text-green-800
+                                           {% elif application.status == 'rejected' %}bg-red-50 text-red-800
+                                           {% elif application.status == 'withdrawn' %}bg-gray-50 text-gray-800
+                                           {% else %}bg-gray-50 text-gray-800{% endif %}">
+                                <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending Review</option>
+                                <option value="reviewing" {% if application.status == 'reviewing' %}selected{% endif %}>Under Review</option>
+                                <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                                <option value="interview_scheduled" {% if application.status == 'interview_scheduled' %}selected{% endif %}>Interview Scheduled</option>
+                                <option value="interview_completed" {% if application.status == 'interview_completed' %}selected{% endif %}>Interview Completed</option>
+                                <option value="offer_made" {% if application.status == 'offer_made' %}selected{% endif %}>Offer Made</option>
+                                <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                                <option value="withdrawn" {% if application.status == 'withdrawn' %}selected{% endif %}>Withdrawn</option>
+                                <option value="hired" {% if application.status == 'hired' %}selected{% endif %}>Hired</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div>{{ application.applied_at|date:"M d, Y" }}</div>
+                            <div class="text-xs text-gray-400">{{ application.applied_at|timesince }} ago</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex items-center space-x-2">
+                                <button onclick="viewApplication('{{ application.id }}')"
+                                        class="text-indigo-600 hover:text-indigo-900" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if application.get_resume_file %}
+                                    <a href="{{ application.get_resume_file.url }}" target="_blank"
+                                       class="text-blue-600 hover:text-blue-900" title="View Resume">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'chat:start_chat' username=application.applicant.username %}"
+                                   class="text-green-600 hover:text-green-900" title="Message Applicant">
+                                    <i class="fas fa-comments"></i>
+                                </a>
+                                <button onclick="deleteApplication('{{ application.id }}')"
+                                        class="text-red-600 hover:text-red-900" title="Delete Application">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">No applications found</h3>
+                                <p class="text-sm">
+                                    {% if search_query or selected_status %}
+                                        Try adjusting your search filters or check back later.
+                                    {% else %}
+                                        Applications will appear here once candidates start applying for jobs.
+                                    {% endif %}
+                                </p>
+                                {% if search_query or selected_status %}
+                                    <button onclick="clearFilters()" 
+                                            class="mt-4 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                        Clear Filters
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+            <div class="flex items-center justify-between">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}"
+                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Previous
+                        </a>
+                    {% endif %}
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}"
+                           class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing <span class="font-medium">{{ page_obj.start_index }}</span> to 
+                            <span class="font-medium">{{ page_obj.end_index }}</span> of 
+                            <span class="font-medium">{{ page_obj.paginator.count }}</span> results
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                            {% if page_obj.has_previous %}
+                                <a href="?page=1&{{ request.GET.urlencode }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                                <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            {% endif %}
+
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-indigo-50 text-sm font-medium text-indigo-600">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                                <a href="?page={{ page_obj.paginator.num_pages }}&{{ request.GET.urlencode }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Application Detail Modal -->
+<div id="applicationModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                        Application Details
+                    </h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="applicationDetails">
+                    <!-- Application details will be loaded here via AJAX -->
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button onclick="closeModal()" type="button" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSRF Token -->
+{% csrf_token %}
+
+<script>
+// Get CSRF token for AJAX requests
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+// Filter functions
+function applyFilters() {
+    const form = document.createElement('form');
+    form.method = 'GET';
+
+    const filters = ['search', 'status'];
+    filters.forEach(filterId => {
+        const element = document.getElementById(filterId);
+        if (element && element.value) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = filterId;
+            input.value = element.value;
+            form.appendChild(input);
+        }
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function clearFilters() {
+    window.location.href = window.location.pathname;
+}
+
+// Status update function
+function updateStatus(applicationId, newStatus) {
+    fetch(`/admin-panel/applications/${applicationId}/update-status/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            status: newStatus
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the select element's styling based on new status
+            const selectElement = event.target;
+            selectElement.className = selectElement.className.replace(/bg-\w+-50 text-\w+-800/g, '');
+
+            const statusColors = {
+                'pending': 'bg-yellow-50 text-yellow-800',
+                'reviewing': 'bg-blue-50 text-blue-800',
+                'shortlisted': 'bg-purple-50 text-purple-800',
+                'interview_scheduled': 'bg-indigo-50 text-indigo-800',
+                'interview_completed': 'bg-indigo-50 text-indigo-800',
+                'offer_made': 'bg-green-50 text-green-800',
+                'hired': 'bg-green-50 text-green-800',
+                'rejected': 'bg-red-50 text-red-800',
+                'withdrawn': 'bg-gray-50 text-gray-800'
+            };
+
+            selectElement.className += ' ' + (statusColors[newStatus] || 'bg-gray-50 text-gray-800');
+
+            // Show success notification
+            showNotification('Status updated successfully', 'success');
+        } else {
+            showNotification('Error: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while updating status', 'error');
+    });
+}
+
+// View application details
+function viewApplication(applicationId) {
+    const modal = document.getElementById('applicationModal');
+    const detailsContainer = document.getElementById('applicationDetails');
+
+    // Show loading state
+    detailsContainer.innerHTML = `
+        <div class="text-center py-8">
+            <i class="fas fa-spinner fa-spin text-2xl text-gray-400 mb-4"></i>
+            <p>Loading application details...</p>
+        </div>
+    `;
+
+    modal.classList.remove('hidden');
+
+    // Fetch application details
+    fetch(`/admin-panel/applications/${applicationId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                detailsContainer.innerHTML = `
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">Applicant Information</h4>
+                            <div class="bg-gray-50 rounded-md p-4">
+                                <p class="text-sm text-gray-700"><strong>Name:</strong> ${data.applicant_name}</p>
+                                <p class="text-sm text-gray-700"><strong>Email:</strong> ${data.applicant_email}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">Cover Letter</h4>
+                            <div class="bg-gray-50 rounded-md p-4">
+                                <p class="text-sm text-gray-700">${data.cover_letter || 'No cover letter provided'}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">Skills & Experience</h4>
+                            <div class="bg-gray-50 rounded-md p-4">
+                                <p class="text-sm text-gray-700">${data.experience || 'No additional information provided'}</p>
+                            </div>
+                        </div>
+                        ${data.portfolio_links ? `
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">Portfolio Links</h4>
+                            <div class="bg-gray-50 rounded-md p-4">
+                                <p class="text-sm text-gray-700">${data.portfolio_links}</p>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                `;
+            } else {
+                detailsContainer.innerHTML = `
+                    <div class="text-center py-8 text-red-600">
+                        <i class="fas fa-exclamation-triangle text-2xl mb-4"></i>
+                        <p>Failed to load application details</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            detailsContainer.innerHTML = `
+                <div class="text-center py-8 text-red-600">
+                    <i class="fas fa-exclamation-triangle text-2xl mb-4"></i>
+                    <p>Error loading application details</p>
+                </div>
+            `;
+        });
+}
+
+function closeModal() {
+    document.getElementById('applicationModal').classList.add('hidden');
+}
+
+// Delete application
+function deleteApplication(applicationId) {
+    if (confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
+        fetch(`/admin-panel/applications/${applicationId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Application deleted successfully', 'success');
+                // Reload page after short delay
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showNotification('Error: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred while deleting', 'error');
+        });
+    }
+}
+
+// Export all applications
+function exportAllApplications() {
+    const filters = new URLSearchParams();
+
+    // Add current filters to export
+    const filterInputs = ['search', 'status'];
+    filterInputs.forEach(filterId => {
+        const element = document.getElementById(filterId);
+        if (element && element.value) {
+            filters.append(filterId, element.value);
+        }
+    });
+
+    // For now, redirect to a general export URL - you can implement this later
+    window.location.href = `/admin-panel/applications/export/?${filters.toString()}`;
+}
+
+// Notification system
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden`;
+
+    const bgColor = type === 'success' ? 'bg-green-50' : type === 'error' ? 'bg-red-50' : 'bg-blue-50';
+    const textColor = type === 'success' ? 'text-green-800' : type === 'error' ? 'text-red-800' : 'text-blue-800';
+    const iconColor = type === 'success' ? 'text-green-400' : type === 'error' ? 'text-red-400' : 'text-blue-400';
+    const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+
+    notification.innerHTML = `
+        <div class="p-4">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-${icon} ${iconColor}"></i>
+                </div>
+                <div class="ml-3 w-0 flex-1 pt-0.5">
+                    <p class="text-sm font-medium ${textColor}">${message}</p>
+                </div>
+                <div class="ml-4 flex-shrink-0 flex">
+                    <button onclick="this.parentElement.parentElement.parentElement.parentElement.remove()" class="rounded-md inline-flex text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}
