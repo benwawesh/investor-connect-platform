@@ -22,4 +22,9 @@ urlpatterns = [
     path('settings/notifications/', views.notification_settings, name='notification_settings'),
     path('profile/delete-picture/', views.delete_profile_picture, name='delete_profile_picture'),
     path('contact-admin/', views.contact_admin, name='contact_admin'),
+
+    # M-Pesa Payment Integration
+    path('payments/callback/', views.mpesa_callback, name='mpesa_callback'),
+    path('payments/status/', views.check_payment_status, name='check_payment_status'),
+    path('simulate-payment/', views.simulate_payment_success, name='simulate_payment_success'),
 ]
