@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // WebSocket setup
     const roomId = '{{ chat_room.id }}';
     const currentUserId = {{ user.id }};
-   const wsPath = `ws://127.0.0.1:8080/ws/chat/${roomId}/`;
+   const wsPath = `ws://138.68.170.226/ws/chat/${roomId}/`;
 
     console.log('🔌 Connecting to enhanced WebSocket:', wsPath);
     let chatSocket = new WebSocket(wsPath);
