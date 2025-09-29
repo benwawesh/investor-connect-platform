@@ -1137,3 +1137,86 @@ def export_applications(request, job_id):
 
     return response
 
+
+from payments.models import PlatformSettings
+from django.core.cache import cache
+
+
+# Then add this view function anywhere in the file (suggested: after payment_management)
+
+@admin_required
+def platform_settings(request):
+    """Manage platform-wide settings like registration and subscription fees"""
+
+    # Get or create settings
+    settings = PlatformSettings.get_settings()
+
+    if request.method == 'POST':
+        try:
+            # Get new values from form
+            registration_fee = request.POST.get('registration_fee')
+            subscription_fee = request.POST.get('subscription_fee')
+
+            # Validate
+            if not registration_fee or not subscription_fee:
+                messages.error(request, 'Both fees are required')
+                return redirect('admin_panel:platform_settings')
+
+            # Convert to Decimal and validate minimum
+            from decimal import Decimal, InvalidOperation
+
+            try:
+                reg_fee = Decimal(registration_fee)
+                sub_fee = Decimal(subscription_fee)
+
+                if reg_fee < Decimal('1.00'):
+                    messages.error(request, 'Registration fee must be at least KES 1.00')
+                    return redirect('admin_panel:platform_settings')
+
+                if sub_fee < Decimal('1.00'):
+                    messages.error(request, 'Subscription fee must be at least KES 1.00')
+                    return redirect('admin_panel:platform_settings')
+
+            except InvalidOperation:
+                messages.error(request, 'Invalid fee amount. Please enter valid numbers.')
+                return redirect('admin_panel:platform_settings')
+
+            # Update settings
+            settings.registration_fee = reg_fee
+            settings.subscription_fee = sub_fee
+            settings.updated_by = request.user.username
+            settings.save()
+
+            # Clear cache
+            cache.delete('platform_settings')
+
+            messages.success(request,
+                             f'Platform settings updated successfully! Registration: KES {reg_fee}, Subscription: KES {sub_fee}')
+            return redirect('admin_panel:platform_settings')
+
+        except Exception as e:
+            messages.error(request, f'Error updating settings: {str(e)}')
+            return redirect('admin_panel:platform_settings')
+
+    # GET request - show form
+    context = {
+        'settings': settings,
+        'recent_changes': PlatformSettings.objects.all().order_by('-updated_at')[:10]
+    }
+    return render(request, 'admin_panel/platform_settings.html', context)
+
+
+@admin_required
+def view_settings_history(request):
+    """View history of settings changes"""
+    all_settings = PlatformSettings.objects.all().order_by('-updated_at')
+
+    # Pagination
+    paginator = Paginator(all_settings, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+    }
+    return render(request, 'admin_panel/settings_history.html', context)

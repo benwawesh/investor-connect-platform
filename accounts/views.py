@@ -15,7 +15,7 @@ from payments.mpesa_service import MpesaService
 from django.views.decorators.http import require_http_methods
 from .forms import SignUpWithPaymentForm
 from .models import CustomUser, UserProfileExtension, NotificationSettings
-from payments.models import SubscriptionPayment
+from payments.models import SubscriptionPayment,PlatformSettings
 from django.conf import settings
 from pitches.models import IdeaPitch
 from django.shortcuts import render, redirect, get_object_or_404
@@ -43,6 +43,10 @@ def home(request):
 
 def signup_with_payment(request):
     """Single page signup with STK push payment"""
+
+    # Get dynamic registration fee from database
+    registration_fee = PlatformSettings.get_registration_fee()
+
     if request.method == 'POST':
         form = SignUpWithPaymentForm(request.POST)
         if form.is_valid():
@@ -50,7 +54,10 @@ def signup_with_payment(request):
             phone_number = form.cleaned_data.get('phone_number', '')
             if not phone_number:
                 messages.error(request, 'Phone number is required for M-Pesa payment.')
-                return render(request, 'accounts/signup_with_payment.html', {'form': form})
+                return render(request, 'accounts/signup_with_payment.html', {
+                    'form': form,
+                    'registration_fee': registration_fee
+                })
 
             # Format phone number once and use everywhere
             if phone_number.startswith('0'):
@@ -68,15 +75,24 @@ def signup_with_payment(request):
 
             if CustomUser.objects.filter(username=username).exists():
                 messages.error(request, f'Username "{username}" already exists. Please choose a different username.')
-                return render(request, 'accounts/signup_with_payment.html', {'form': form})
+                return render(request, 'accounts/signup_with_payment.html', {
+                    'form': form,
+                    'registration_fee': registration_fee
+                })
 
             if CustomUser.objects.filter(email=email).exists():
                 messages.error(request, f'Email "{email}" already exists. Please use a different email.')
-                return render(request, 'accounts/signup_with_payment.html', {'form': form})
+                return render(request, 'accounts/signup_with_payment.html', {
+                    'form': form,
+                    'registration_fee': registration_fee
+                })
 
             if CustomUser.objects.filter(phone_number=formatted_phone).exists():
                 messages.error(request, f'Phone number already registered. Please use a different number.')
-                return render(request, 'accounts/signup_with_payment.html', {'form': form})
+                return render(request, 'accounts/signup_with_payment.html', {
+                    'form': form,
+                    'registration_fee': registration_fee
+                })
 
             # Store user data in session with FORMATTED phone number
             request.session['signup_data'] = {
@@ -91,21 +107,20 @@ def signup_with_payment(request):
             # Check environment and process payment accordingly
             if settings.MPESA_ENVIRONMENT == 'sandbox':
                 # For sandbox, initiate real STK push (but with test credentials)
-                return initiate_stk_push_payment(request, formatted_phone)
+                return initiate_stk_push_payment(request, formatted_phone, registration_fee)
             else:
                 # Production mode - real M-Pesa request
-                return initiate_stk_push_payment(request, formatted_phone)
+                return initiate_stk_push_payment(request, formatted_phone, registration_fee)
     else:
         form = SignUpWithPaymentForm()
 
     return render(request, 'accounts/signup_with_payment.html', {
         'form': form,
-        'subscription_price': settings.SUBSCRIPTION_PRICE
+        'registration_fee': registration_fee  # Changed from subscription_price
     })
 
-
-def initiate_stk_push_payment(request, phone_number):
-    """Initiate STK push payment for registration"""
+def initiate_stk_push_payment(request, phone_number, registration_fee):
+    """Initiate STK push payment for registration with dynamic pricing"""
     try:
         signup_data = request.session.get('signup_data')
         if not signup_data:
@@ -115,17 +130,17 @@ def initiate_stk_push_payment(request, phone_number):
         # Generate unique reference
         account_reference = f"REG-{uuid.uuid4().hex[:8].upper()}"
 
-        # Create payment transaction record
+        # Create payment transaction record with DYNAMIC amount
         payment_transaction = SubscriptionPayment.objects.create(
             transaction_type='REGISTRATION',
-            amount=settings.SUBSCRIPTION_PRICE,
+            amount=registration_fee,  # Changed from settings.SUBSCRIPTION_PRICE
             phone_number=phone_number,
             account_reference=account_reference,
             transaction_desc='InvestorConnect Registration Fee',
             temp_email=signup_data['email'],
             temp_username=signup_data['username'],
-            temp_user_type='regular',  # or get from form if you have user types
-            checkout_request_id=f'temp_{uuid.uuid4().hex}'  # Temporary, will be updated
+            temp_user_type='regular',
+            checkout_request_id=f'temp_{uuid.uuid4().hex}'
         )
 
         logger.info(f"Created payment transaction: {payment_transaction.id} for {signup_data['username']}")
@@ -133,11 +148,11 @@ def initiate_stk_push_payment(request, phone_number):
         # Store transaction ID in session
         request.session['payment_transaction_id'] = str(payment_transaction.id)
 
-        # Initialize M-Pesa service and send STK push
+        # Initialize M-Pesa service and send STK push with DYNAMIC amount
         mpesa_service = MpesaService()
         result = mpesa_service.stk_push(
             phone_number=phone_number,
-            amount=settings.SUBSCRIPTION_PRICE,
+            amount=int(registration_fee),  # Changed from settings.SUBSCRIPTION_PRICE, convert to int for M-Pesa
             account_reference=account_reference,
             transaction_desc='InvestorConnect Registration Fee'
         )
@@ -155,7 +170,7 @@ def initiate_stk_push_payment(request, phone_number):
 
             return render(request, 'accounts/payment_pending_signup.html', {
                 'phone_number': phone_number,
-                'amount': settings.SUBSCRIPTION_PRICE,
+                'amount': registration_fee,  # Changed from settings.SUBSCRIPTION_PRICE
                 'transaction_id': str(payment_transaction.id),
                 'checkout_request_id': result['checkout_request_id']
             })
@@ -170,7 +185,7 @@ def initiate_stk_push_payment(request, phone_number):
             messages.error(request, f'Payment request failed: {result["message"]}. Please try again.')
             return render(request, 'accounts/signup_with_payment.html', {
                 'form': SignUpWithPaymentForm(initial=signup_data),
-                'subscription_price': settings.SUBSCRIPTION_PRICE
+                'registration_fee': registration_fee  # Changed from subscription_price
             })
 
     except Exception as e:

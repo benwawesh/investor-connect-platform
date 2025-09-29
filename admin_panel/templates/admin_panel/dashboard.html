@@ -1,139 +1,351 @@
 {% extends 'base.html' %}
 
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Admin Dashboard - InvestorConnect{% endblock %}
 
 {% block content %}
-<div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-    <p class="text-gray-600 mt-2">Manage your investor platform</p>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p class="mt-1 text-sm text-gray-600">Platform administration and management</p>
+    </div>
+
+    <!-- Platform Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-users text-blue-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Users</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ total_users }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-coins text-green-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Investors</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ total_investors }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-lightbulb text-blue-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Entrepreneurs</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ total_entrepreneurs }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Pending Pitches</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ pending_pitches }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Job Management Section -->
+    <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-medium text-gray-900">Enhanced Job Management</h2>
+            <a href="{% url 'admin_panel:job_management' %}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                <i class="fas fa-cog mr-2"></i>
+                Open Job Manager
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+            <div class="text-center">
+                <div class="bg-indigo-100 rounded-lg p-4 hover:bg-indigo-200 transition-colors cursor-pointer" onclick="window.location.href='{% url 'admin_panel:job_management' %}'">
+                    <i class="fas fa-briefcase text-indigo-600 text-3xl mb-2"></i>
+                    <div class="text-2xl font-bold text-gray-900">{{ total_jobs|default:0 }}</div>
+                    <div class="text-sm text-gray-600">Total Jobs</div>
+                    <div class="mt-2 text-indigo-600 text-sm font-medium">
+                        Enhanced Manager →
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <div class="bg-green-100 rounded-lg p-4 hover:bg-green-200 transition-colors cursor-pointer" onclick="window.location.href='{% url 'admin_panel:job_management' %}?status=active'">
+                    <i class="fas fa-check-circle text-green-600 text-3xl mb-2"></i>
+                    <div class="text-2xl font-bold text-gray-900">{{ active_jobs|default:0 }}</div>
+                    <div class="text-sm text-gray-600">Active Jobs</div>
+                    <div class="mt-2 text-green-600 text-sm font-medium">
+                        View Active →
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <div class="bg-yellow-100 rounded-lg p-4 hover:bg-yellow-200 transition-colors cursor-pointer" onclick="window.location.href='{% url 'admin_panel:application_management' %}'">
+                    <i class="fas fa-file-alt text-yellow-600 text-3xl mb-2"></i>
+                    <div class="text-2xl font-bold text-gray-900">{{ total_applications|default:0 }}</div>
+                    <div class="text-sm text-gray-600">Applications</div>
+                    <div class="mt-2 text-yellow-600 text-sm font-medium">
+                        Manage All →
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <div class="bg-red-100 rounded-lg p-4 hover:bg-red-200 transition-colors cursor-pointer" onclick="window.location.href='{% url 'admin_panel:application_management' %}?status=pending'">
+                    <i class="fas fa-hourglass-half text-red-600 text-3xl mb-2"></i>
+                    <div class="text-2xl font-bold text-gray-900">{{ pending_applications|default:0 }}</div>
+                    <div class="text-sm text-gray-600">Pending Review</div>
+                    <div class="mt-2 text-red-600 text-sm font-medium">
+                        Review Now →
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <div class="bg-purple-100 rounded-lg p-4 hover:bg-purple-200 transition-colors cursor-pointer" onclick="window.location.href='{% url 'admin_panel:job_analytics' %}'">
+                    <i class="fas fa-chart-bar text-purple-600 text-3xl mb-2"></i>
+                    <div class="text-2xl font-bold text-gray-900">Analytics</div>
+                    <div class="text-sm text-gray-600">Job Insights</div>
+                    <div class="mt-2 text-purple-600 text-sm font-medium">
+                        View Reports →
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Job Actions -->
+        <div class="mt-6 flex flex-wrap gap-3">
+            <a href="{% url 'jobs:post_job' %}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                <i class="fas fa-plus mr-2"></i>
+                Post New Job
+            </a>
+            <a href="{% url 'admin_panel:job_management' %}?status=inactive"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <i class="fas fa-pause mr-2"></i>
+                Review Inactive Jobs
+            </a>
+            <a href="{% url 'admin_panel:job_seeker_management' %}"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <i class="fas fa-user-tie mr-2"></i>
+                Manage Job Seekers
+            </a>
+            <button onclick="exportAllJobs()"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <i class="fas fa-download mr-2"></i>
+                Export Job Data
+            </button>
+        </div>
+    </div>
+
+    <!-- Platform Management Navigation -->
+    <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Platform Management</h2>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <a href="{% url 'admin_panel:user_management' %}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                <i class="fas fa-users mr-2"></i>User Management
+            </a>
+
+            <a href="{% url 'admin_panel:pitch_management' %}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                <i class="fas fa-lightbulb mr-2"></i>Pitch Management
+            </a>
+
+            <a href="{% url 'admin_panel:manage_categories' %}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700">
+                <i class="fas fa-tags mr-2"></i>Categories
+            </a>
+
+            <a href="{% url 'admin_panel:payment_management' %}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700">
+                <i class="fas fa-credit-card mr-2"></i>Payments
+            </a>
+
+            <a href="{% url 'admin_panel:platform_settings' %}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                <i class="fas fa-cog mr-2"></i>Platform Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <a href="{% url 'admin_panel:register_investor' %}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700">
+                <i class="fas fa-user-plus mr-2"></i>Register Investor
+            </a>
+
+            <a href="{% url 'pitches:create_investor_post' %}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700">
+                <i class="fas fa-plus mr-2"></i>Create Insight Post
+            </a>
+
+            <a href="{% url 'pitches:investor_posts_feed' %}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700">
+                <i class="fas fa-newspaper mr-2"></i>View Insights Feed
+            </a>
+
+            <a href="{% url 'accounts:dashboard' %}"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <i class="fas fa-home mr-2"></i>User Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activity Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Job Postings -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900">Recent Job Postings</h3>
+                    <a href="{% url 'admin_panel:job_management' %}" class="text-indigo-600 hover:text-indigo-900 text-sm">
+                        View All
+                    </a>
+                </div>
+            </div>
+            <div class="px-6 py-4">
+                {% if recent_jobs %}
+                    <div class="space-y-4">
+                        {% for job in recent_jobs %}
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">{{ job.title }}</h4>
+                                <p class="text-sm text-gray-600">{{ job.company_name }}</p>
+                                <p class="text-xs text-gray-500">{{ job.created_at|timesince }} ago</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                {% if job.is_active %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Active
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        Inactive
+                                    </span>
+                                {% endif %}
+                                <a href="{% url 'admin_panel:job_applications' job.id %}" class="text-indigo-600 hover:text-indigo-900 text-sm">
+                                    View
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-6 text-center">
+                        <a href="{% url 'admin_panel:job_management' %}"
+                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-indigo-100 hover:bg-indigo-200">
+                            Open Enhanced Job Manager
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 text-center py-8">No recent job postings.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Job Applications -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900">Recent Job Applications</h3>
+                    <a href="{% url 'admin_panel:application_management' %}" class="text-indigo-600 hover:text-indigo-900 text-sm">
+                        View All
+                    </a>
+                </div>
+            </div>
+            <div class="px-6 py-4">
+                {% if recent_applications %}
+                    <div class="space-y-4">
+                        {% for application in recent_applications %}
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">{{ application.applicant.username }}</h4>
+                                <p class="text-sm text-gray-600">{{ application.job.title }}</p>
+                                <p class="text-xs text-gray-500">{{ application.applied_at|timesince }} ago</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                {% if application.status == 'pending' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        {{ application.get_status_display }}
+                                    </span>
+                                {% elif application.status == 'shortlisted' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        {{ application.get_status_display }}
+                                    </span>
+                                {% elif application.status == 'hired' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ application.get_status_display }}
+                                    </span>
+                                {% elif application.status == 'rejected' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        {{ application.get_status_display }}
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ application.get_status_display }}
+                                    </span>
+                                {% endif %}
+                                <a href="{% url 'admin_panel:job_applications' application.job.id %}" class="text-indigo-600 hover:text-indigo-900 text-sm">
+                                    View
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-6 text-center">
+                        <a href="{% url 'admin_panel:application_management' %}"
+                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-indigo-100 hover:bg-indigo-200">
+                            View All Applications
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 text-center py-8">No recent job applications.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Stats Cards -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center">
-            <div class="p-3 rounded-full bg-yellow-100">
-                <i class="fas fa-clock text-yellow-600 text-xl"></i>
-            </div>
-            <div class="ml-4">
-                <h3 class="text-lg font-semibold text-gray-900">{{ pending_pitches }}</h3>
-                <p class="text-gray-600">Pending Pitches</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center">
-            <div class="p-3 rounded-full bg-blue-100">
-                <i class="fas fa-user-clock text-blue-600 text-xl"></i>
-            </div>
-            <div class="ml-4">
-                <h3 class="text-lg font-semibold text-gray-900">{{ pending_users }}</h3>
-                <p class="text-gray-600">Pending Users</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center">
-            <div class="p-3 rounded-full bg-green-100">
-                <i class="fas fa-users text-green-600 text-xl"></i>
-            </div>
-            <div class="ml-4">
-                <h3 class="text-lg font-semibold text-gray-900">{{ total_users }}</h3>
-                <p class="text-gray-600">Total Users</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center">
-            <div class="p-3 rounded-full bg-purple-100">
-                <i class="fas fa-tags text-purple-600 text-xl"></i>
-            </div>
-            <div class="ml-4">
-                <h3 class="text-lg font-semibold text-gray-900">{{ total_categories }}</h3>
-                <p class="text-gray-600">Categories</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="bg-white rounded-lg shadow mb-8">
-    <div class="p-6 border-b border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-900">Quick Actions</h2>
-    </div>
-    <div class="p-6">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <a href="{% url 'admin_panel:manage_categories' %}" 
-               class="bg-blue-500 text-white px-4 py-3 rounded-lg text-center hover:bg-blue-600 transition">
-                <i class="fas fa-tags block mb-2"></i>
-                Manage Categories
-            </a>
-            <a href="{% url 'admin_panel:user_management' %}" 
-               class="bg-green-500 text-white px-4 py-3 rounded-lg text-center hover:bg-green-600 transition">
-                <i class="fas fa-users block mb-2"></i>
-                Manage Users
-            </a>
-            <a href="{% url 'admin_panel:pitch_management' %}" 
-               class="bg-yellow-500 text-white px-4 py-3 rounded-lg text-center hover:bg-yellow-600 transition">
-                <i class="fas fa-lightbulb block mb-2"></i>
-                Review Pitches
-            </a>
-            <a href="{% url 'admin_panel:payment_management' %}" 
-               class="bg-purple-500 text-white px-4 py-3 rounded-lg text-center hover:bg-purple-600 transition">
-                <i class="fas fa-dollar-sign block mb-2"></i>
-                View Payments
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Activity -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <div class="bg-white rounded-lg shadow">
-        <div class="p-6 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-900">Recent Pitches</h2>
-        </div>
-        <div class="p-6">
-            {% for pitch in recent_pitches %}
-            <div class="flex justify-between items-center py-3 {% if not forloop.last %}border-b border-gray-100{% endif %}">
-                <div>
-                    <h4 class="font-medium text-gray-900">{{ pitch.title }}</h4>
-                    <p class="text-sm text-gray-600">by {{ pitch.user.username }}</p>
-                </div>
-                <div class="text-right">
-                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Pending</span>
-                    <p class="text-xs text-gray-500 mt-1">{{ pitch.submitted_at|timesince }} ago</p>
-                </div>
-            </div>
-            {% empty %}
-            <p class="text-gray-500 text-center py-4">No pending pitches</p>
-            {% endfor %}
-        </div>
-    </div>
-    
-    <div class="bg-white rounded-lg shadow">
-        <div class="p-6 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-900">Recent Payments</h2>
-        </div>
-        <div class="p-6">
-            {% for payment in recent_payments %}
-            <div class="flex justify-between items-center py-3 {% if not forloop.last %}border-b border-gray-100{% endif %}">
-                <div>
-                    <h4 class="font-medium text-gray-900">{{ payment.user.username }}</h4>
-                    <p class="text-sm text-gray-600">KES {{ payment.amount }}</p>
-                </div>
-                <div class="text-right">
-                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Completed</span>
-                    <p class="text-xs text-gray-500 mt-1">{{ payment.payment_date|timesince }} ago</p>
-                </div>
-            </div>
-            {% empty %}
-            <p class="text-gray-500 text-center py-4">No recent payments</p>
-            {% endfor %}
-        </div>
-    </div>
-</div>
+<script>
+// Export all jobs function
+function exportAllJobs() {
+    window.location.href = '{% url "admin_panel:export_jobs" %}';
+}
+</script>
 {% endblock %}

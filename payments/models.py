@@ -1,6 +1,77 @@
 import uuid
 from django.db import models
 from django.conf import settings
+from django.core.validators import MinValueValidator
+from django.core.cache import cache
+
+
+class PlatformSettings(models.Model):
+    """
+    Singleton model for platform-wide settings.
+    Only one instance should exist.
+    """
+    registration_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=1.00,
+        validators=[MinValueValidator(1.00)],
+        help_text="Registration fee in KES (minimum 1.00)"
+    )
+    subscription_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=100.00,
+        validators=[MinValueValidator(1.00)],
+        help_text="Monthly subscription fee in KES (minimum 1.00)"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Only one settings instance can be active"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.CharField(max_length=100, blank=True)
+
+    class Meta:
+        verbose_name = "Platform Settings"
+        verbose_name_plural = "Platform Settings"
+
+    def __str__(self):
+        return f"Platform Settings (Registration: KES {self.registration_fee}, Subscription: KES {self.subscription_fee})"
+
+    def save(self, *args, **kwargs):
+        """Ensure only one active settings instance exists"""
+        if self.is_active:
+            # Deactivate all other instances
+            PlatformSettings.objects.exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+        # Clear cache when settings are updated
+        cache.delete('platform_settings')
+
+    @classmethod
+    def get_settings(cls):
+        """Get active settings with caching"""
+        settings = cache.get('platform_settings')
+        if settings is None:
+            settings = cls.objects.filter(is_active=True).first()
+            if not settings:
+                # Create default settings if none exist
+                settings = cls.objects.create(
+                    registration_fee=1.00,
+                    subscription_fee=100.00,
+                    is_active=True
+                )
+            cache.set('platform_settings', settings, 3600)  # Cache for 1 hour
+        return settings
+
+    @classmethod
+    def get_registration_fee(cls):
+        """Quick method to get just the registration fee"""
+        return cls.get_settings().registration_fee
+
+    @classmethod
+    def get_subscription_fee(cls):
+        """Quick method to get just the subscription fee"""
+        return cls.get_settings().subscription_fee
 
 
 class SubscriptionPayment(models.Model):

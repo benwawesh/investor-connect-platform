@@ -56,4 +56,8 @@ urlpatterns = [
     # Job Seeker Management
     path('job-seekers/', views.job_seeker_management, name='job_seeker_management'),
     path('job-seekers/<int:user_id>/', views.job_seeker_detail, name='job_seeker_detail'),
+
+    # Platform Settings URLs (add these)
+    path('settings/', views.platform_settings, name='platform_settings'),
+    path('settings/history/', views.view_settings_history, name='settings_history'),
 ]
