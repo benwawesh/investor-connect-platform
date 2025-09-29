@@ -7,8 +7,7 @@ app_name = 'accounts'
 
 urlpatterns = [
     path('', views.home, name='home'),
-    path('signup/', views.signup_with_payment, name='signup'),
-    path('simulate-payment/', views.simulate_payment_success, name='simulate_payment_success'),
+    path('signup/', views.signup_with_payment, name='signup_with_payment'),
     path('login/', LoginView.as_view(template_name='accounts/login.html'), name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard, name='dashboard'),
@@ -26,5 +25,4 @@ urlpatterns = [
     # M-Pesa Payment Integration
     path('payments/callback/', views.mpesa_callback, name='mpesa_callback'),
     path('payments/status/', views.check_payment_status, name='check_payment_status'),
-    path('simulate-payment/', views.simulate_payment_success, name='simulate_payment_success'),
 ]

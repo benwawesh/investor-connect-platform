@@ -761,7 +761,7 @@
 
             <div class="nav-buttons">
                 <a href="{% url 'accounts:login' %}" class="nav-btn nav-btn-login">Login</a>
-               <a href="{% url 'accounts:signup' %}"  class="nav-btn nav-btn-signup">Sign Up</a>
+               <a href="{% url 'accounts:signup_with_payment' %}"  class="nav-btn nav-btn-signup">Sign Up</a>
             </div>
 
             <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
@@ -779,7 +779,7 @@
                     </ul>
                     <div class="mobile-nav-buttons">
                         <a href="{% url 'accounts:login' %}" class="nav-btn nav-btn-login">Login</a>
-                        <a href="{% url 'accounts:signup' %}"  class="nav-btn nav-btn-signup">Sign Up</a>
+                        <a href="{% url 'accounts:signup_with_payment' %}"  class="nav-btn nav-btn-signup">Sign Up</a>
                     </div>
                 </div>
             </div>
@@ -895,7 +895,7 @@
                     Join thousands of entrepreneurs and professionals who have transformed their futures through direct, meaningful conversations with investors and employers.
                 </p>
                 <div class="cta-buttons">
-                    <a href="{% url 'accounts:signup' %}" class="cta-button-light">
+                    <a href="{% url 'accounts:signup_with_payment' %}" class="cta-button-light">
                         <i class="fas fa-user-plus" style="margin-right: 0.8rem;"></i>
                         JOIN FREE TODAY
                     </a>

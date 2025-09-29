@@ -7,6 +7,11 @@ from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+import uuid
+import logging
+from payments.mpesa_service import MpesaService
 from django.views.decorators.http import require_http_methods
 from .forms import SignUpWithPaymentForm
 from .models import CustomUser, UserProfileExtension, NotificationSettings
