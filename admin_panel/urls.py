@@ -28,6 +28,7 @@ urlpatterns = [
 
     # Payment management
     path('payments/', views.payment_management, name='payment_management'),
+    path('financial-analysis/', views.financial_analysis, name='financial_analysis'),
 
     # Enhanced Job Management System
     path('jobs/', views.job_management, name='job_management'),

@@ -1220,3 +1220,84 @@ def view_settings_history(request):
         'page_obj': page_obj,
     }
     return render(request, 'admin_panel/settings_history.html', context)
+
+
+@admin_required
+def financial_analysis(request):
+    """Financial analysis dashboard with revenue metrics and visualizations"""
+    from django.db.models import Sum, Count, Q
+    from decimal import Decimal
+
+    # Get all payments
+    all_payments = SubscriptionPayment.objects.all()
+
+    # Revenue by status
+    completed_payments = all_payments.filter(status='completed')
+    pending_payments = all_payments.filter(status='pending')
+    failed_payments = all_payments.filter(status='failed')
+
+    # Calculate totals
+    total_revenue = completed_payments.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    pending_revenue = pending_payments.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    failed_revenue = failed_payments.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+    # Revenue by transaction type
+    registration_revenue = completed_payments.filter(
+        transaction_type='REGISTRATION'
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+    subscription_revenue = completed_payments.filter(
+        transaction_type='SUBSCRIPTION'
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+    # Count statistics
+    total_transactions = all_payments.count()
+    completed_count = completed_payments.count()
+    pending_count = pending_payments.count()
+    failed_count = failed_payments.count()
+
+    registration_count = all_payments.filter(transaction_type='REGISTRATION').count()
+    subscription_count = all_payments.filter(transaction_type='SUBSCRIPTION').count()
+
+    # Calculate success rate
+    success_rate = (completed_count / total_transactions * 100) if total_transactions > 0 else 0
+
+    # Average transaction value
+    avg_transaction = (total_revenue / completed_count) if completed_count > 0 else Decimal('0.00')
+
+    # Recent transactions
+    recent_transactions = all_payments.select_related('user').order_by('-payment_date')[:10]
+
+    # Prepare data for charts (JSON format for Chart.js)
+    status_chart_data = {
+        'labels': ['Completed', 'Pending', 'Failed'],
+        'data': [completed_count, pending_count, failed_count],
+        'colors': ['#10b981', '#f59e0b', '#ef4444']
+    }
+
+    type_chart_data = {
+        'labels': ['Registration', 'Subscription'],
+        'data': [float(registration_revenue), float(subscription_revenue)],
+        'colors': ['#3b82f6', '#8b5cf6']
+    }
+
+    context = {
+        'total_revenue': total_revenue,
+        'pending_revenue': pending_revenue,
+        'failed_revenue': failed_revenue,
+        'registration_revenue': registration_revenue,
+        'subscription_revenue': subscription_revenue,
+        'total_transactions': total_transactions,
+        'completed_count': completed_count,
+        'pending_count': pending_count,
+        'failed_count': failed_count,
+        'registration_count': registration_count,
+        'subscription_count': subscription_count,
+        'success_rate': round(success_rate, 1),
+        'avg_transaction': avg_transaction,
+        'recent_transactions': recent_transactions,
+        'status_chart_data': json.dumps(status_chart_data),
+        'type_chart_data': json.dumps(type_chart_data),
+    }
+
+    return render(request, 'admin_panel/financial_analysis.html', context)
