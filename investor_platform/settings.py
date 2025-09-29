@@ -133,17 +133,28 @@ LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'accounts:dashboard'
 LOGOUT_REDIRECT_URL = 'accounts:login'
 
-# M-Pesa Configuration
+# M-Pesa Configuration with Environment Switching
 MPESA_ENVIRONMENT = config('MPESA_ENVIRONMENT', default='sandbox')
-MPESA_CONSUMER_KEY = config('MPESA_CONSUMER_KEY', default='')
-MPESA_CONSUMER_SECRET = config('MPESA_CONSUMER_SECRET', default='')
-MPESA_SHORTCODE = config('MPESA_SHORTCODE', default='174379')
-MPESA_EXPRESS_SHORTCODE = config('MPESA_EXPRESS_SHORTCODE', default='174379')
-MPESA_PASSKEY = config('MPESA_PASSKEY', default='bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919')
-MPESA_CALLBACK_URL = config('MPESA_CALLBACK_URL', default='https://bazuuconnect.com/payments/callback/')
 
-# Legacy M-Pesa settings (for backward compatibility)
-MPESA_BUSINESS_SHORTCODE = config('MPESA_BUSINESS_SHORTCODE', default='174379')
+if MPESA_ENVIRONMENT == 'production':
+    # Production M-Pesa Credentials
+    MPESA_CONSUMER_KEY = config('MPESA_PROD_CONSUMER_KEY')
+    MPESA_CONSUMER_SECRET = config('MPESA_PROD_CONSUMER_SECRET')
+    MPESA_SHORTCODE = config('MPESA_PROD_SHORTCODE')
+    MPESA_PASSKEY = config('MPESA_PROD_PASSKEY')
+    MPESA_API_URL = 'https://api.safaricom.co.ke'
+else:
+    # Sandbox M-Pesa Credentials
+    MPESA_CONSUMER_KEY = config('MPESA_SANDBOX_CONSUMER_KEY')
+    MPESA_CONSUMER_SECRET = config('MPESA_SANDBOX_CONSUMER_SECRET')
+    MPESA_SHORTCODE = config('MPESA_SANDBOX_SHORTCODE')
+    MPESA_PASSKEY = config('MPESA_SANDBOX_PASSKEY')
+    MPESA_API_URL = 'https://sandbox.safaricom.co.ke'
+
+# Common M-Pesa settings
+MPESA_EXPRESS_SHORTCODE = MPESA_SHORTCODE
+MPESA_BUSINESS_SHORTCODE = MPESA_SHORTCODE
+MPESA_CALLBACK_URL = config('MPESA_CALLBACK_URL', default='https://bazuuconnect.com/payments/callback/')
 
 # Subscription Settings
 SUBSCRIPTION_PRICE = config('SUBSCRIPTION_PRICE', default=500, cast=int)
