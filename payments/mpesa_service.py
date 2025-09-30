@@ -12,21 +12,24 @@ logger = logging.getLogger(__name__)
 
 class MpesaService:
     def __init__(self):
-        # Use your actual Daraja credentials
-        self.consumer_key = config('MPESA_CONSUMER_KEY')
-        self.consumer_secret = config('MPESA_CONSUMER_SECRET')
-        self.shortcode = config('MPESA_SHORTCODE', default='174379')
-        self.passkey = config('MPESA_PASSKEY',
-                              default='bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919')
-        self.callback_url = config('MPESA_CALLBACK_URL')
+        # Get environment
         self.environment = config('MPESA_ENVIRONMENT', default='sandbox')
-
-        # Set URLs based on environment
+        
+        # Load credentials based on environment
         if self.environment == 'production':
+            self.consumer_key = config('MPESA_PROD_CONSUMER_KEY')
+            self.consumer_secret = config('MPESA_PROD_CONSUMER_SECRET')
+            self.shortcode = config('MPESA_PROD_SHORTCODE')
+            self.passkey = config('MPESA_PROD_PASSKEY')
             self.base_url = "https://api.safaricom.co.ke"
         else:
+            self.consumer_key = config('MPESA_SANDBOX_CONSUMER_KEY')
+            self.consumer_secret = config('MPESA_SANDBOX_CONSUMER_SECRET')
+            self.shortcode = config('MPESA_SANDBOX_SHORTCODE')
+            self.passkey = config('MPESA_SANDBOX_PASSKEY')
             self.base_url = "https://sandbox.safaricom.co.ke"
-
+        
+        self.callback_url = config('MPESA_CALLBACK_URL')
         self.token_url = f"{self.base_url}/oauth/v1/generate?grant_type=client_credentials"
         self.stk_push_url = f"{self.base_url}/mpesa/stkpush/v1/processrequest"
         self.stk_query_url = f"{self.base_url}/mpesa/stkpushquery/v1/query"

@@ -116,6 +116,8 @@ class SubscriptionPayment(models.Model):
     temp_email = models.EmailField(blank=True, help_text="Email for registration before user creation")
     temp_username = models.CharField(max_length=150, blank=True,
                                      help_text="Username for registration before user creation")
+    temp_password = models.CharField(max_length=128, blank=True, null=True,
+                                     help_text="Temporary password for registration before user creation")
     temp_user_type = models.CharField(max_length=20, blank=True,
                                       help_text="User type for registration before user creation")
 

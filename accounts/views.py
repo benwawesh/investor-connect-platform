@@ -139,6 +139,7 @@ def initiate_stk_push_payment(request, phone_number, registration_fee):
             transaction_desc='InvestorConnect Registration Fee',
             temp_email=signup_data['email'],
             temp_username=signup_data['username'],
+	    temp_password=signup_data['password'],
             temp_user_type='regular',
             checkout_request_id=f'temp_{uuid.uuid4().hex}'
         )
@@ -385,7 +386,7 @@ def check_payment_status(request):
             response_data.update({
                 'message': 'Payment completed successfully! Your account has been created.',
                 'receipt_number': payment_transaction.mpesa_receipt_number,
-                'redirect_url': '/accounts/login/',
+                'redirect_url': '/login/',
                 'success': True
             })
         elif payment_transaction.status == 'failed':
@@ -439,7 +440,7 @@ def simulate_payment_success(request):
         create_user_from_payment_transaction(payment_transaction)
 
         messages.success(request, 'Payment simulated successfully! Account created.')
-        return redirect('accounts:login')
+        return redirect('login')
 
     except SubscriptionPayment.DoesNotExist:
         messages.error(request, 'Payment transaction not found.')
