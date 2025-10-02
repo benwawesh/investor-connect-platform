@@ -20,12 +20,14 @@ class MpesaService:
             self.consumer_key = config('MPESA_PROD_CONSUMER_KEY')
             self.consumer_secret = config('MPESA_PROD_CONSUMER_SECRET')
             self.shortcode = config('MPESA_PROD_SHORTCODE')
+            self.till_number = config('MPESA_PROD_TILL_NUMBER')
             self.passkey = config('MPESA_PROD_PASSKEY')
             self.base_url = "https://api.safaricom.co.ke"
         else:
             self.consumer_key = config('MPESA_SANDBOX_CONSUMER_KEY')
             self.consumer_secret = config('MPESA_SANDBOX_CONSUMER_SECRET')
             self.shortcode = config('MPESA_SANDBOX_SHORTCODE')
+            self.till_number = config('MPESA_SANDBOX_SHORTCODE')
             self.passkey = config('MPESA_SANDBOX_PASSKEY')
             self.base_url = "https://sandbox.safaricom.co.ke"
         
@@ -93,7 +95,7 @@ class MpesaService:
             return phone[1:]
         elif phone.startswith('254'):
             return phone
-        elif len(phone) == 9:  # Assume it's missing country code
+        elif len(phone) == 9:
             return '254' + phone
         else:
             return '254' + phone
@@ -110,6 +112,15 @@ class MpesaService:
             formatted_phone = self.format_phone_number(phone_number)
             logger.info(f"Formatted phone number: {formatted_phone}")
 
+            # DEBUG LOGGING
+            logger.info("=== STK PUSH DEBUG ===")
+            logger.info(f"Environment: {self.environment}")
+            logger.info(f"BusinessShortCode: {self.shortcode}")
+            till_value = getattr(self, 'till_number', 'NOT SET')
+            logger.info(f"PartyB (Till): {till_value}")
+            logger.info(f"Base URL: {self.base_url}")
+            logger.info("======================")
+
             # Generate password and timestamp
             password, timestamp = self.generate_password()
 
@@ -124,10 +135,10 @@ class MpesaService:
                 "BusinessShortCode": self.shortcode,
                 "Password": password,
                 "Timestamp": timestamp,
-                "TransactionType": "CustomerPayBillOnline",
+                "TransactionType": "CustomerBuyGoodsOnline",
                 "Amount": int(amount),
                 "PartyA": formatted_phone,
-                "PartyB": self.shortcode,
+                "PartyB": self.till_number if hasattr(self, 'till_number') else self.shortcode,
                 "PhoneNumber": formatted_phone,
                 "CallBackURL": self.callback_url,
                 "AccountReference": account_reference,
@@ -152,8 +163,7 @@ class MpesaService:
                     'response_data': response_data
                 }
             else:
-                error_message = response_data.get('errorMessage') or response_data.get('ResponseDescription',
-                                                                                       'STK push failed')
+                error_message = response_data.get('errorMessage') or response_data.get('ResponseDescription', 'STK push failed')
                 return {
                     'success': False,
                     'message': error_message,
