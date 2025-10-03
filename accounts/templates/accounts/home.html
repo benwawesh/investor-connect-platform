@@ -1,1049 +1,1244 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InvestorConnect - Direct Funding & Career Connections</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends 'base.html' %}
+{% load static %}
 
-        body, html {
-            height: 100%;
-            overflow-x: hidden;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            width: 100%;
-        }
+{% block title %}BazuuConnect | Your Direct Link to Jobs & Funding in Kenya{% endblock %}
 
-        /* Navigation Bar */
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(251, 191, 36, 0.2);
-            z-index: 1000;
-            padding: 1rem 0;
-            transition: all 0.3s ease;
-        }
+{% block extra_css %}
+<style>
+    /* --- CSS Variables for Consistency --- */
+    :root {
+        --color-primary: #1e40af;
+        --color-secondary: #3b82f6;
+        --color-accent: #10b981;
+        --color-accent-dark: #059669;
+        --color-text: #1f2937;
+        --color-text-subtle: #6b7280;
+        --color-bg-light: #f8fafb;
+    }
 
-        .navbar.scrolled {
-            background: rgba(255, 255, 255, 0.98);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
+    /* Reset main padding for full-width sections */
+    main {
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
 
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    /* --- Hero Section with White Background --- */
+    .hero-section {
+        min-height: 100vh;
+        background: white;
+        position: relative;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+    }
 
-        .nav-logo {
-            display: flex;
-            align-items: center;
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: #1f2937;
-            text-decoration: none;
-        }
+    .hero-particles {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
 
-        .nav-logo i {
-            color: #fbbf24;
-            margin-right: 0.5rem;
-            font-size: 1.8rem;
-        }
+    .particle {
+        position: absolute;
+        background: rgba(16, 185, 129, 0.15);
+        border-radius: 50%;
+        animation: float 20s infinite ease-in-out;
+    }
 
-        .nav-menu {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-            align-items: center;
-        }
+    @keyframes float {
+        0%, 100% { transform: translateY(0) translateX(0); }
+        25% { transform: translateY(-50px) translateX(50px); }
+        50% { transform: translateY(-100px) translateX(-30px); }
+        75% { transform: translateY(-50px) translateX(-50px); }
+    }
 
-        .nav-menu a {
-            text-decoration: none;
-            color: #374151;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-        }
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        align-items: center;
+    }
 
-        .nav-menu a:hover {
-            color: #fbbf24;
-            background: rgba(251, 191, 36, 0.1);
-        }
+    .hero-text {
+        color: var(--color-text);
+    }
 
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
+    .hero-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: rgba(16, 185, 129, 0.1);
+        border: 2px solid var(--color-accent);
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: var(--color-accent);
+        animation: fadeInUp 0.8s ease;
+    }
 
-        .nav-btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 700;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-size: 0.95rem;
-        }
+    .hero-title {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 900;
+        line-height: 1.1;
+        margin-bottom: 1.5rem;
+        color: var(--color-text);
+        animation: fadeInUp 0.8s ease 0.2s backwards;
+    }
 
-        .nav-btn-login {
-            color: #1f2937;
-            border: 2px solid transparent;
-        }
+    .hero-title .highlight {
+        color: var(--color-accent);
+    }
 
-        .nav-btn-login:hover {
-            color: #fbbf24;
-        }
+    .hero-subtitle {
+        font-size: 1.2rem;
+        line-height: 1.7;
+        color: var(--color-text-subtle);
+        margin-bottom: 2.5rem;
+        animation: fadeInUp 0.8s ease 0.4s backwards;
+    }
 
-        .nav-btn-signup {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            color: #1f2937;
-            border: 2px solid transparent;
-        }
+    .hero-cta-group {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        animation: fadeInUp 0.8s ease 0.6s backwards;
+    }
 
-        .nav-btn-signup:hover {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            transform: translateY(-1px);
-        }
+    .cta-primary-btn {
+        padding: 1.2rem 2.5rem;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+        color: white;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+    }
 
-        /* Mobile Menu */
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: #1f2937;
-            cursor: pointer;
-        }
+    .cta-primary-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(16, 185, 129, 0.5);
+    }
 
-        .mobile-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100%;
-            background: white;
-            border-top: 1px solid rgba(251, 191, 36, 0.2);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
+    .cta-secondary-btn {
+        padding: 1.2rem 2.5rem;
+        border-radius: 12px;
+        background: transparent;
+        border: 2px solid var(--color-primary);
+        color: var(--color-primary);
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
 
-        .mobile-menu.active {
-            display: block;
-        }
+    .cta-secondary-btn:hover {
+        background: var(--color-primary);
+        color: white;
+    }
 
-        .mobile-menu-content {
-            padding: 2rem;
-        }
+    .hero-visual {
+        position: relative;
+        animation: fadeIn 1s ease 0.8s backwards;
+    }
 
-        .mobile-nav-menu {
-            list-style: none;
-            margin-bottom: 2rem;
-        }
+    .hero-image-placeholder {
+        width: 100%;
+        height: 500px;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+        border-radius: 20px;
+        border: 2px solid var(--color-accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: var(--color-accent);
+    }
 
-        .mobile-nav-menu li {
-            margin-bottom: 1rem;
-        }
+    .scroll-indicator {
+        position: absolute;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: bounce 2s infinite;
+        color: var(--color-text-subtle);
+        font-size: 2rem;
+        opacity: 0.7;
+        cursor: pointer;
+    }
 
-        .mobile-nav-menu a {
-            text-decoration: none;
-            color: #374151;
-            font-weight: 600;
-            font-size: 1.1rem;
-            display: block;
-            padding: 0.75rem 0;
-        }
+    @keyframes bounce {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50% { transform: translateX(-50%) translateY(10px); }
+    }
 
-        .mobile-nav-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
         }
-
-        /* Hero Section with Image Placeholder */
-        .hero-section {
-            height: 100vh;
-            width: 100vw;
-            background: linear-gradient(135deg, rgba(251, 191, 36, 0.85), rgba(245, 158, 11, 0.9)),
-                        linear-gradient(45deg, #fbbf24, #f59e0b);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-            margin-top: 80px;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
+    }
 
-        /* Image Placeholder */
-        .hero-image-placeholder {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect width="100%" height="100%" fill="%23f3f4f6" opacity="0.1"/><g transform="translate(300,200)"><rect x="50" y="100" width="200" height="150" rx="10" fill="%23ffffff" opacity="0.8"/><rect x="350" y="80" width="200" height="170" rx="10" fill="%23ffffff" opacity="0.8"/><circle cx="150" cy="175" r="30" fill="%23fbbf24"/><circle cx="450" cy="165" r="30" fill="%23fbbf24"/><text x="150" y="240" text-anchor="middle" fill="%23374151" font-family="Arial" font-size="14">Professional 1</text><text x="450" y="230" text-anchor="middle" fill="%23374151" font-family="Arial" font-size="14">Professional 2</text></g></svg>') center/cover;
-            z-index: 1;
-        }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
 
-        .hero-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(251, 191, 36, 0.8);
-            z-index: 2;
-        }
+    /* --- Top Companies Carousel Section --- */
+    .companies-section {
+        background: white;
+        padding: 6rem 2rem;
+    }
 
+    .section-header {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+
+    .section-header h2 {
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 900;
+        color: var(--color-text);
+        margin-bottom: 1rem;
+    }
+
+    .section-header .accent {
+        color: var(--color-accent);
+    }
+
+    .section-header p {
+        font-size: 1.2rem;
+        color: var(--color-text-subtle);
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .carousel-container {
+        position: relative;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 60px;
+    }
+
+    .carousel-wrapper {
+        overflow: hidden;
+    }
+
+    .companies-carousel {
+        display: flex;
+        gap: 2rem;
+        transition: transform 0.5s ease;
+    }
+
+    .company-card {
+        min-width: 350px;
+        background: white;
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border: 2px solid var(--color-bg-light);
+        flex-shrink: 0;
+    }
+
+    .company-card:hover {
+        border-color: var(--color-accent);
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(16, 185, 129, 0.2);
+    }
+
+    .company-rank {
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+        color: white;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .company-info h3 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--color-text);
+        margin-bottom: 0.75rem;
+    }
+
+    .company-industry {
+        color: var(--color-text-subtle);
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .company-salary {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+        padding: 1rem;
+        border-radius: 12px;
+        text-align: center;
+        border: 2px solid var(--color-accent);
+    }
+
+    .salary-label {
+        font-size: 0.85rem;
+        color: var(--color-text-subtle);
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .salary-amount {
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--color-accent);
+    }
+
+    .carousel-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 10;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .carousel-btn:hover {
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+    }
+
+    .carousel-btn.prev {
+        left: 0;
+    }
+
+    .carousel-btn.next {
+        right: 0;
+    }
+
+    .carousel-dots {
+        display: flex;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-top: 3rem;
+    }
+
+    .carousel-dot {
+        width: 12px;
+        height: 12px;
+        background: #d1d5db;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .carousel-dot.active {
+        background: var(--color-accent);
+        width: 35px;
+        border-radius: 6px;
+    }
+
+    /* --- Section Styles --- */
+    .section {
+        padding: 6rem 2rem;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* --- How It Works --- */
+    .how-it-works-section {
+        background: var(--color-bg-light);
+    }
+
+    .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .step-card {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 20px;
+        text-align: center;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.6s ease;
+        border: 2px solid transparent;
+    }
+
+    .step-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .step-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border-color: var(--color-accent);
+    }
+
+    .step-number {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 900;
+        margin: 0 auto 1.5rem;
+    }
+
+    .step-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: var(--color-text);
+    }
+
+    .step-description {
+        color: var(--color-text-subtle);
+        line-height: 1.6;
+    }
+
+    /* --- Value Props --- */
+    .value-section {
+        background: white;
+    }
+
+    .value-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .value-item {
+        background: var(--color-bg-light);
+        padding: 2.5rem;
+        border-radius: 20px;
+        text-align: center;
+        opacity: 0;
+        transform: scale(0.9);
+        transition: all 0.6s ease;
+        border: 2px solid transparent;
+    }
+
+    .value-item.visible {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .value-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 15px 35px rgba(16, 185, 129, 0.2);
+        border-color: var(--color-accent);
+    }
+
+    .value-icon {
+        font-size: 3.5rem;
+        color: var(--color-accent);
+        margin-bottom: 1.5rem;
+        display: inline-block;
+        transition: transform 0.3s ease;
+    }
+
+    .value-item:hover .value-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .value-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--color-text);
+    }
+
+    .value-description {
+        color: var(--color-text-subtle);
+        line-height: 1.6;
+    }
+
+    /* --- Testimonials Carousel --- */
+    .testimonials-section {
+        background: var(--color-bg-light);
+    }
+
+    .testimonials-carousel {
+        position: relative;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .testimonial-card {
+        background: white;
+        padding: 3rem;
+        border-radius: 20px;
+        border: 2px solid var(--color-accent);
+        text-align: center;
+        display: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .testimonial-card.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .testimonial-stars {
+        font-size: 1.5rem;
+        color: #f59e0b;
+        margin-bottom: 1.5rem;
+    }
+
+    .testimonial-text {
+        font-size: 1.3rem;
+        font-style: italic;
+        line-height: 1.7;
+        margin-bottom: 2rem;
+        color: var(--color-text);
+    }
+
+    .testimonial-author {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        color: var(--color-text);
+    }
+
+    .testimonial-role {
+        color: var(--color-text-subtle);
+    }
+
+    .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #d1d5db;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .dot.active {
+        background: var(--color-accent);
+        width: 30px;
+        border-radius: 6px;
+    }
+
+    /* --- FAQ Section --- */
+    .faq-section {
+        background: white;
+    }
+
+    .faq-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .faq-item {
+        margin-bottom: 1rem;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.6s ease;
+    }
+
+    .faq-item.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .faq-question {
+        background: var(--color-bg-light);
+        padding: 1.5rem;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+        color: var(--color-text);
+        border: 2px solid transparent;
+    }
+
+    .faq-question:hover {
+        border-color: var(--color-accent);
+    }
+
+    .faq-icon {
+        font-size: 1.2rem;
+        transition: transform 0.3s ease;
+        color: var(--color-accent);
+    }
+
+    .faq-item.active .faq-icon {
+        transform: rotate(180deg);
+    }
+
+    .faq-answer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+        padding: 0 1.5rem;
+        color: var(--color-text-subtle);
+        line-height: 1.6;
+    }
+
+    .faq-item.active .faq-answer {
+        max-height: 200px;
+        padding: 1.5rem;
+    }
+
+    /* --- Final CTA --- */
+    .final-cta-section {
+        background: var(--color-bg-light);
+        text-align: center;
+        padding: 6rem 2rem;
+    }
+
+    .final-cta-section h2 {
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 900;
+        margin-bottom: 1rem;
+        color: var(--color-text);
+    }
+
+    .final-cta-section p {
+        font-size: 1.2rem;
+        color: var(--color-text-subtle);
+        margin-bottom: 2.5rem;
+    }
+
+    .cta-price {
+        display: inline-block;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        color: var(--color-text-subtle);
+    }
+
+    /* --- Responsive Design --- */
+    @media (max-width: 768px) {
         .hero-content {
+            grid-template-columns: 1fr;
             text-align: center;
-            color: #1f2937;
-            max-width: 1000px;
-            padding: 0 2rem;
-            z-index: 3;
-            position: relative;
         }
 
-        .hero-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 0.75rem 2rem;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-            color: #1f2937;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .hero-visual {
+            display: none;
         }
 
-        .hero-title {
-            font-size: clamp(3.5rem, 8vw, 7rem);
-            font-weight: 900;
-            margin-bottom: 1.5rem;
-            line-height: 1.1;
-            color: #1f2937;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .hero-title .highlight {
-            color: #ffffff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .hero-subtitle {
-            font-size: clamp(1.3rem, 3vw, 1.8rem);
-            margin-bottom: 3rem;
-            color: #1f2937;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            font-weight: 500;
-            line-height: 1.6;
-        }
-
-        .hero-cta {
-            display: flex;
-            gap: 1.5rem;
+        .hero-cta-group {
             justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 4rem;
         }
 
-        .cta-button {
-            padding: 1.2rem 2.5rem;
-            border-radius: 12px;
-            font-weight: 700;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            transition: all 0.3s ease;
-            font-size: 1.2rem;
-            border: 3px solid transparent;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .section {
+            padding: 4rem 1rem;
         }
 
-        .cta-primary {
-            background: #1f2937;
-            color: white;
-            box-shadow: 0 10px 30px rgba(31, 41, 55, 0.4);
+        .company-card {
+            min-width: 280px;
         }
-
-        .cta-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(31, 41, 55, 0.5);
-        }
-
-        .cta-secondary {
-            background: rgba(255, 255, 255, 0.95);
-            color: #1f2937;
-            border: 3px solid #1f2937;
-        }
-
-        .cta-secondary:hover {
-            background: #1f2937;
-            color: white;
-            transform: translateY(-3px);
-        }
-
-        .hero-stats {
-            display: flex;
-            justify-content: center;
-            gap: 4rem;
-            flex-wrap: wrap;
-        }
-
-        .stat-item {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 1.5rem 2rem;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-number {
-            font-size: 3rem;
-            font-weight: 900;
-            color: #1f2937;
-            display: block;
-        }
-
-        .stat-label {
-            font-size: 1rem;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-
-        /* Value Propositions Section */
-        .value-section {
-            padding: 8rem 0;
-            background: linear-gradient(135deg, #ffffff, #fef3c7);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 5rem;
-        }
-
-        .section-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            color: #1f2937;
-            padding: 0.75rem 2rem;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .section-title {
-            font-size: clamp(3rem, 5vw, 4rem);
-            font-weight: 900;
-            color: #1f2937;
-            margin-bottom: 1.5rem;
-            line-height: 1.2;
-        }
-
-        .section-subtitle {
-            font-size: 1.4rem;
-            color: #6b7280;
-            max-width: 700px;
-            margin: 0 auto;
-            line-height: 1.6;
-        }
-
-        .value-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 3rem;
-            margin-top: 5rem;
-        }
-
-        .value-card {
-            background: white;
-            padding: 3.5rem;
-            border-radius: 25px;
-            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.08);
-            border: 3px solid #fbbf24;
-            transition: all 0.4s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .value-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-        }
-
-        .value-card:hover {
-            transform: translateY(-15px);
-            box-shadow: 0 35px 90px rgba(0, 0, 0, 0.15);
-            border-color: #f59e0b;
-        }
-
-        .value-icon {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            border-radius: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 2.5rem;
-            font-size: 2.5rem;
-            color: white;
-            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3);
-        }
-
-        .value-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #1f2937;
-            margin-bottom: 1.5rem;
-        }
-
-        .value-description {
-            color: #6b7280;
-            margin-bottom: 2rem;
-            line-height: 1.7;
-            font-size: 1.1rem;
-        }
-
-        .value-features {
-            list-style: none;
-            padding: 0;
-        }
-
-        .value-features li {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-            color: #374151;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .value-features li::before {
-            content: "✓";
-            color: #fbbf24;
-            font-weight: bold;
-            margin-right: 1rem;
-            width: 25px;
-            height: 25px;
-            background: rgba(251, 191, 36, 0.15);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-        }
-
-        /* CTA Section */
-        .cta-section {
-            background: linear-gradient(135deg, #1f2937, #374151);
-            color: white;
-            padding: 8rem 0;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .cta-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1.5" fill="rgba(251,191,36,0.1)"/></pattern></defs><rect width="100%" height="100%" fill="url(%23dots)"/></svg>');
-        }
-
-        .cta-content {
-            position: relative;
-            z-index: 2;
-        }
-
-        .cta-title {
-            font-size: clamp(2.5rem, 4vw, 3.5rem);
-            font-weight: 900;
-            margin-bottom: 1.5rem;
-            color: white;
-        }
-
-        .cta-subtitle {
-            font-size: 1.4rem;
-            margin-bottom: 3rem;
-            opacity: 0.95;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-            line-height: 1.6;
-        }
-
-        .cta-buttons {
-            display: flex;
-            gap: 1.5rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .cta-button-light {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            color: #1f2937;
-            padding: 1.2rem 2.5rem;
-            border-radius: 12px;
-            font-weight: 700;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            font-size: 1.2rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .cta-button-light:hover {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.4);
-        }
-
-        .cta-button-outline {
-            background: transparent;
-            border: 3px solid #fbbf24;
-            color: #fbbf24;
-            padding: 1.2rem 2.5rem;
-            border-radius: 12px;
-            font-weight: 700;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            font-size: 1.2rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .cta-button-outline:hover {
-            background: #fbbf24;
-            color: #1f2937;
-            transform: translateY(-2px);
-        }
-
-        /* Partners Section */
-        .partners-section {
-            padding: 6rem 0;
-            background: white;
-            overflow: hidden;
-        }
-
-        .partners-header {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-
-        .partners-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #1f2937;
-            margin-bottom: 1rem;
-        }
-
-        .partners-subtitle {
-            color: #6b7280;
-            max-width: 600px;
-            margin: 0 auto;
-            font-size: 1.2rem;
-            line-height: 1.6;
-        }
-
-        .partners-slider {
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(135deg, #fef3c7, #fbbf24);
-            padding: 3rem 0;
-            margin-top: 3rem;
-        }
-
-        .partners-track {
-            display: flex;
-            animation: slide 35s infinite linear;
-            gap: 3rem;
-        }
-
-        @keyframes slide {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-        .partner-card {
-            flex-shrink: 0;
-            width: 320px;
-            background: white;
-            padding: 2.5rem;
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            border: 2px solid #fbbf24;
-            transition: all 0.3s ease;
-        }
-
-        .partner-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-            border-color: #f59e0b;
-        }
-
-        .partner-logo {
-            width: 90px;
-            height: 90px;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-            font-size: 2rem;
-            color: white;
-            font-weight: 700;
-            box-shadow: 0 8px 25px rgba(251, 191, 36, 0.3);
-        }
-
-        .partner-name {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 0.5rem;
-        }
-
-        .partner-type {
-            color: #f59e0b;
-            margin-bottom: 1rem;
-            font-size: 1rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .partner-description {
-            color: #6b7280;
-            font-size: 1rem;
-            line-height: 1.6;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .nav-menu,
-            .nav-buttons {
-                display: none;
-            }
-
-            .mobile-menu-btn {
-                display: block;
-            }
-
-            .hero-section {
-                margin-top: 70px;
-            }
-
-            .hero-stats {
-                gap: 2rem;
-            }
-
-            .stat-item {
-                padding: 1rem 1.5rem;
-            }
-
-            .value-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .value-card {
-                padding: 2.5rem;
-            }
-
-            .cta-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .partner-card {
-                width: 280px;
-            }
-
-            .partners-track {
-                gap: 2rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .nav-container {
-                padding: 0 1rem;
-            }
-
-            .hero-content {
-                padding: 0 1rem;
-            }
-
-            .container {
-                padding: 0 1rem;
-            }
-
-            .value-card {
-                padding: 2rem;
-            }
-
-            .partner-card {
-                width: 250px;
-            }
-
-            .hero-cta {
-                gap: 1rem;
-            }
-
-            .cta-button {
-                padding: 1rem 2rem;
-                font-size: 1rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Navigation Bar -->
-    <nav class="navbar" id="navbar">
-        <div class="nav-container">
-            <a href="#" class="nav-logo">
-                <i class="fas fa-handshake"></i>
-                InvestorConnect
-            </a>
-
-            <ul class="nav-menu">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#services">Services</a></li>
-                <li><a href="#partners">Partners</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-
-            <div class="nav-buttons">
-                <a href="{% url 'accounts:login' %}" class="nav-btn nav-btn-login">Login</a>
-               <a href="{% url 'accounts:signup_with_payment' %}"  class="nav-btn nav-btn-signup">Sign Up</a>
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-particles">
+        <div class="particle" style="width: 50px; height: 50px; left: 10%; top: 20%; animation-delay: 0s;"></div>
+        <div class="particle" style="width: 30px; height: 30px; left: 80%; top: 30%; animation-delay: 2s;"></div>
+        <div class="particle" style="width: 40px; height: 40px; left: 60%; top: 60%; animation-delay: 4s;"></div>
+        <div class="particle" style="width: 25px; height: 25px; left: 20%; top: 70%; animation-delay: 6s;"></div>
+        <div class="particle" style="width: 35px; height: 35px; left: 90%; top: 80%; animation-delay: 8s;"></div>
+    </div>
+
+    <div class="hero-content">
+        <div class="hero-text">
+            <div class="hero-badge">
+                <i class="fas fa-bolt"></i> Premium Access Platform
             </div>
+            <h1 class="hero-title">
+                Your Direct Link to <span class="highlight">Jobs & Funding</span> in Kenya
+            </h1>
+            <p class="hero-subtitle">
+                Skip the endless applications and pitch deck rejections. Get direct access to employers ready to hire and investors ready to fund. Your future starts with one conversation.
+            </p>
+            <div class="hero-cta-group">
+                <a href="{% url 'accounts:signup_with_payment' %}" class="cta-primary-btn">
+                    Launch Your Career <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#how-it-works" class="cta-secondary-btn">
+                    See How It Works
+                </a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-image-placeholder">
+                <i class="fas fa-rocket"></i>
+            </div>
+        </div>
+    </div>
 
-            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-                <i class="fas fa-bars"></i>
+    <div class="scroll-indicator">
+        <i class="fas fa-chevron-down"></i>
+    </div>
+</section>
+
+<!-- Top Companies Carousel Section -->
+<section class="companies-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Top <span class="accent">Companies</span> in Kenya</h2>
+            <p>Connect with the best employers offering competitive salaries and growth opportunities</p>
+        </div>
+
+        <div class="carousel-container">
+            <button class="carousel-btn prev" onclick="moveCarousel(-1)">
+                <i class="fas fa-chevron-left"></i>
             </button>
 
-            <div class="mobile-menu" id="mobileMenu">
-                <div class="mobile-menu-content">
-                    <ul class="mobile-nav-menu">
-                        <li><a href="#home">Home</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#services">Services</a></li>
-                        <li><a href="#partners">Partners</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                    </ul>
-                    <div class="mobile-nav-buttons">
-                        <a href="{% url 'accounts:login' %}" class="nav-btn nav-btn-login">Login</a>
-                        <a href="{% url 'accounts:signup_with_payment' %}"  class="nav-btn nav-btn-signup">Sign Up</a>
+            <div class="carousel-wrapper">
+                <div class="companies-carousel" id="companiesCarousel">
+                    <div class="company-card">
+                        <div class="company-rank">#1</div>
+                        <div class="company-info">
+                            <h3>Safaricom PLC</h3>
+                            <p class="company-industry">
+                                <i class="fas fa-building"></i>
+                                Telecommunications & Technology
+                            </p>
+                        </div>
+                        <div class="company-salary">
+                            <span class="salary-label">Starting Salary</span>
+                            <div class="salary-amount">KSh 180K</div>
+                        </div>
+                    </div>
+
+                    <div class="company-card">
+                        <div class="company-rank">#2</div>
+                        <div class="company-info">
+                            <h3>Equity Bank</h3>
+                            <p class="company-industry">
+                                <i class="fas fa-university"></i>
+                                Banking & Financial Services
+                            </p>
+                        </div>
+                        <div class="company-salary">
+                            <span class="salary-label">Starting Salary</span>
+                            <div class="salary-amount">KSh 165K</div>
+                        </div>
+                    </div>
+
+                    <div class="company-card">
+                        <div class="company-rank">#3</div>
+                        <div class="company-info">
+                            <h3>KCB Group</h3>
+                            <p class="company-industry">
+                                <i class="fas fa-chart-line"></i>
+                                Banking & Investment
+                            </p>
+                        </div>
+                        <div class="company-salary">
+                            <span class="salary-label">Starting Salary</span>
+                            <div class="salary-amount">KSh 160K</div>
+                        </div>
+                    </div>
+
+                    <div class="company-card">
+                        <div class="company-rank">#4</div>
+                        <div class="company-info">
+                            <h3>Deloitte Kenya</h3>
+                            <p class="company-industry">
+                                <i class="fas fa-briefcase"></i>
+                                Consulting & Professional Services
+                            </p>
+                        </div>
+                        <div class="company-salary">
+                            <span class="salary-label">Starting Salary</span>
+                            <div class="salary-amount">KSh 155K</div>
+                        </div>
+                    </div>
+
+                    <div class="company-card">
+                        <div class="company-rank">#5</div>
+                        <div class="company-info">
+                            <h3>PwC Kenya</h3>
+                            <p class="company-industry">
+                                <i class="fas fa-file-alt"></i>
+                                Audit & Advisory
+                            </p>
+                        </div>
+                        <div class="company-salary">
+                            <span class="salary-label">Starting Salary</span>
+                            <div class="salary-amount">KSh 150K</div>
+                        </div>
+                    </div>
+
+                    <div class="company-card">
+                        <div class="company-rank">#6</div>
+                        <div class="company-info">
+                            <h3>East African Breweries</h3>
+                            <p class="company-industry">
+                                <i class="fas fa-industry"></i>
+                                Manufacturing & Distribution
+                            </p>
+                        </div>
+                        <div class="company-salary">
+                            <span class="salary-label">Starting Salary</span>
+                            <div class="salary-amount">KSh 145K</div>
+                        </div>
+                    </div>
+
+                    <div class="company-card">
+                        <div class="company-rank">#7</div>
+                        <div class="company-info">
+                            <h3>Kenya Airways</h3>
+                            <p class="company-industry">
+                                <i class="fas fa-plane"></i>
+                                Aviation & Travel
+                            </p>
+                        </div>
+                        <div class="company-salary">
+                            <span class="salary-label">Starting Salary</span>
+                            <div class="salary-amount">KSh 140K</div>
+                        </div>
+                    </div>
+
+                    <div class="company-card">
+                        <div class="company-rank">#8</div>
+                        <div class="company-info">
+                            <h3>Unilever Kenya</h3>
+                            <p class="company-industry">
+                                <i class="fas fa-shopping-basket"></i>
+                                Consumer Goods
+                            </p>
+                        </div>
+                        <div class="company-salary">
+                            <span class="salary-label">Starting Salary</span>
+                            <div class="salary-amount">KSh 138K</div>
+                        </div>
+                    </div>
+
+                    <div class="company-card">
+                        <div class="company-rank">#9</div>
+                        <div class="company-info">
+                            <h3>Microsoft Kenya</h3>
+                            <p class="company-industry">
+                                <i class="fas fa-laptop-code"></i>
+                                Technology & Software
+                            </p>
+                        </div>
+                        <div class="company-salary">
+                            <span class="salary-label">Starting Salary</span>
+                            <div class="salary-amount">KSh 195K</div>
+                        </div>
+                    </div>
+
+                    <div class="company-card">
+                        <div class="company-rank">#10</div>
+                        <div class="company-info">
+                            <h3>Coca-Cola Kenya</h3>
+                            <p class="company-industry">
+                                <i class="fas fa-glass-whiskey"></i>
+                                Beverage Manufacturing
+                            </p>
+                        </div>
+                        <div class="company-salary">
+                            <span class="salary-label">Starting Salary</span>
+                            <div class="salary-amount">KSh 135K</div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </nav>
 
-    <!-- Hero Section with Image Placeholder -->
-    <section class="hero-section" id="home">
-        <div class="hero-image-placeholder"></div>
-        <div class="hero-overlay"></div>
-
-        <div class="hero-content">
-            <div class="hero-badge">
-                Direct Funding & Career Connections
-            </div>
-
-            <h1 class="hero-title">
-                FUND YOUR IDEAS.<br>
-                BUILD YOUR CAREER.<br>
-                <span class="highlight">CONNECT DIRECTLY.</span>
-            </h1>
-
-            <p class="hero-subtitle">
-                The only platform where entrepreneurs talk directly with investors and job seekers connect straight to employers.
-                No middlemen. No barriers. Just real conversations that change lives.
-            </p>
-
-            <div class="hero-cta">
-                <a href="#signup" class="cta-button cta-primary">
-                    <i class="fas fa-rocket" style="margin-right: 0.8rem;"></i>
-                    START YOUR JOURNEY
-                </a>
-                <a href="#learn-more" class="cta-button cta-secondary">
-                    <i class="fas fa-play" style="margin-right: 0.8rem;"></i>
-                    SEE HOW IT WORKS
-                </a>
-            </div>
-
-            <div class="hero-stats">
-                <div class="stat-item">
-                    <span class="stat-number">2,500+</span>
-                    <span class="stat-label">Ideas Funded</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number">5,800+</span>
-                    <span class="stat-label">Jobs Secured</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number">100%</span>
-                    <span class="stat-label">Direct Access</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Value Propositions Section -->
-    <section class="value-section" id="learn-more">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">What Makes Us Different</div>
-                <h2 class="section-title">Direct Communication Changes Everything</h2>
-                <p class="section-subtitle">
-                    Skip the gatekeepers, eliminate the waiting, and start building meaningful relationships that fund your dreams and advance your career.
-                </p>
-            </div>
-
-            <div class="value-grid">
-                <!-- Direct Investor Access -->
-                <div class="value-card">
-                    <div class="value-icon">
-                        <i class="fas fa-comments-dollar"></i>
-                    </div>
-                    <h3 class="value-title">Direct Investor Access</h3>
-                    <p class="value-description">
-                        Talk directly with verified investors who want to fund your ideas. No applications, no waiting - just real conversations about your vision.
-                    </p>
-                    <ul class="value-features">
-                        <li>Real-time chat with interested investors</li>
-                        <li>Video pitch sessions on demand</li>
-                        <li>Instant feedback and guidance</li>
-                        <li>Fund both new ideas and growing businesses</li>
-                        <li>Build lasting investor partnerships</li>
-                    </ul>
-                </div>
-
-                <!-- Direct Employer Communication -->
-                <div class="value-card">
-                    <div class="value-icon">
-                        <i class="fas fa-user-tie"></i>
-                    </div>
-                    <h3 class="value-title">Direct Employer Communication</h3>
-                    <p class="value-description">
-                        Connect straight with HR managers and hiring teams. Get insider knowledge about roles and company culture before you even apply.
-                    </p>
-                    <ul class="value-features">
-                        <li>Chat directly with hiring managers</li>
-                        <li>Get real insights into company culture</li>
-                        <li>Understand exact role requirements</li>
-                        <li>Receive immediate application feedback</li>
-                        <li>Fast-track your interview process</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="cta-section">
-        <div class="container">
-            <div class="cta-content">
-                <h2 class="cta-title">Ready for Direct Connections?</h2>
-                <p class="cta-subtitle">
-                    Join thousands of entrepreneurs and professionals who have transformed their futures through direct, meaningful conversations with investors and employers.
-                </p>
-                <div class="cta-buttons">
-                    <a href="{% url 'accounts:signup_with_payment' %}" class="cta-button-light">
-                        <i class="fas fa-user-plus" style="margin-right: 0.8rem;"></i>
-                        JOIN FREE TODAY
-                    </a>
-                    <a href="#partners" class="cta-button-outline">
-                        <i class="fas fa-building" style="margin-right: 0.8rem;"></i>
-                        VIEW PARTNERS
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Partners Sliding Banner -->
-    <section class="partners-section" id="partners">
-        <div class="container">
-            <div class="partners-header">
-                <h2 class="partners-title">Trusted Partnership Network</h2>
-                <p class="partners-subtitle">
-                    We work with leading companies and investment firms to provide exclusive opportunities for our community.
-                </p>
-            </div>
+            <button class="carousel-btn next" onclick="moveCarousel(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
 
-        <div class="partners-slider">
-            <div class="partners-track">
-                <!-- Partner Cards -->
-                <div class="partner-card">
-                    <div class="partner-logo">TC</div>
-                    <h4 class="partner-name">TechCorp Kenya</h4>
-                    <p class="partner-type">Technology Partner</p>
-                    <p class="partner-description">Leading technology solutions provider offering innovative career opportunities and startup funding.</p>
-                </div>
+        <div class="carousel-dots" id="carouselDots"></div>
+    </div>
+</section>
 
-                <div class="partner-card">
-                    <div class="partner-logo">GV</div>
-                    <h4 class="partner-name">GreenVentures</h4>
-                    <p class="partner-type">Investment Partner</p>
-                    <p class="partner-description">Sustainable business investor focused on funding environmentally conscious startups.</p>
-                </div>
+<!-- How It Works Section -->
+<section class="section how-it-works-section" id="how-it-works">
+    <div class="container">
+        <div class="section-header">
+            <h2>Your Path to Opportunity</h2>
+            <p>Our process is simple, transparent, and built for speed. Here's how BazuuConnect works for you.</p>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3 class="step-title">Create Your Profile</h3>
+                <p class="step-description">Sign up in minutes and create a professional profile highlighting your skills, experience, or business idea.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3 class="step-title">Get Direct Access</h3>
+                <p class="step-description">Gain exclusive access to verified employers and active investors. Connect directly via our secure messaging platform.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3 class="step-title">Secure Your Future</h3>
+                <p class="step-description">Engage in real conversations that lead to job offers or funding commitments. No more endless applications.</p>
+            </div>
+        </div>
+    </div>
+</section>
 
-                <div class="partner-card">
-                    <div class="partner-logo">FF</div>
-                    <h4 class="partner-name">FinanceFirst</h4>
-                    <p class="partner-type">Financial Partner</p>
-                    <p class="partner-description">Premier financial services company providing funding solutions and advisory services.</p>
-                </div>
+<!-- Value Props Section -->
+<section class="section value-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>The BazuuConnect Advantage</h2>
+            <p>We're not just a platform; we're a launchpad for your professional and entrepreneurial aspirations.</p>
+        </div>
+        <div class="value-grid">
+            <div class="value-item">
+                <div class="value-icon"><i class="fas fa-comments"></i></div>
+                <h3 class="value-title">Bypass the Resume Pile</h3>
+                <p class="value-description">Communicate directly with hiring managers. Get real-time feedback and move from conversation to interview in days, not months.</p>
+            </div>
+            <div class="value-item">
+                <div class="value-icon"><i class="fas fa-handshake"></i></div>
+                <h3 class="value-title">Access Weekly Funding</h3>
+                <p class="value-description">Pitch your business to our network of investors and secure KSh 100,000 – 400,000 in weekly funding rounds.</p>
+            </div>
+            <div class="value-item">
+                <div class="value-icon"><i class="fas fa-award"></i></div>
+                <h3 class="value-title">Exclusive Mentorship</h3>
+                <p class="value-description">Receive guidance from industry leaders and successful entrepreneurs. Build relationships that propel your career to the next level.</p>
+            </div>
+        </div>
+    </div>
+</section>
 
-                <div class="partner-card">
-                    <div class="partner-logo">MI</div>
-                    <h4 class="partner-name">MobileInnovate</h4>
-                    <p class="partner-type">Innovation Partner</p>
-                    <p class="partner-description">Mobile technology leader creating next-generation digital solutions.</p>
+<!-- Testimonials Section -->
+<section class="section testimonials-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Real People. Real Results.</h2>
+            <p>Don't just take our word for it. Hear from those whose lives BazuuConnect has transformed.</p>
+        </div>
+        <div class="testimonials-carousel">
+            <div class="testimonial-card active">
+                <div class="testimonial-stars">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
                 </div>
-
-                <div class="partner-card">
-                    <div class="partner-logo">SH</div>
-                    <h4 class="partner-name">StartupHub Africa</h4>
-                    <p class="partner-type">Incubator Partner</p>
-                    <p class="partner-description">East Africa's leading startup accelerator providing mentorship and growth opportunities.</p>
+                <p class="testimonial-text">"After months of sending applications with no response, I joined BazuuConnect. Within a week, I was chatting directly with a manager at my dream company. I got the job!"</p>
+                <p class="testimonial-author">Jane M.</p>
+                <p class="testimonial-role">Software Engineer - Hired through BazuuConnect</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
                 </div>
-
-                <div class="partner-card">
-                    <div class="partner-logo">AI</div>
-                    <h4 class="partner-name">AfricaInvest</h4>
-                    <p class="partner-type">Investment Partner</p>
-                    <p class="partner-description">Pan-African investment firm supporting high-growth businesses across the continent.</p>
+                <p class="testimonial-text">"I had a business idea but no capital. BazuuConnect connected me with investors who believed in my vision. I received KSh 250,000 in funding and launched my startup!"</p>
+                <p class="testimonial-author">David K.</p>
+                <p class="testimonial-role">Entrepreneur - Funded through BazuuConnect</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
                 </div>
+                <p class="testimonial-text">"As an employer, finding quality talent was always a challenge. BazuuConnect gave me direct access to pre-vetted candidates. I filled three positions in one month!"</p>
+                <p class="testimonial-author">Sarah W.</p>
+                <p class="testimonial-role">HR Manager - Tech Startup</p>
+            </div>
+            <div class="carousel-dots">
+                <div class="dot active" data-slide="0"></div>
+                <div class="dot" data-slide="1"></div>
+                <div class="dot" data-slide="2"></div>
+            </div>
+        </div>
+    </div>
+</section>
 
-                <div class="partner-card">
-                    <div class="partner-logo">DT</div>
-                    <h4 class="partner-name">DigitalTrends</h4>
-                    <p class="partner-type">Media Partner</p>
-                    <p class="partner-description">Leading digital media company connecting talent with opportunities.</p>
+<!-- FAQ Section -->
+<section class="section faq-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Frequently Asked Questions</h2>
+            <p>Everything you need to know about BazuuConnect</p>
+        </div>
+        <div class="faq-container">
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>How much does it cost to join?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
                 </div>
-
-                <div class="partner-card">
-                    <div class="partner-logo">BG</div>
-                    <h4 class="partner-name">BusinessGrowth</h4>
-                    <p class="partner-type">Consulting Partner</p>
-                    <p class="partner-description">Strategic consulting firm helping startups scale and professionals advance careers.</p>
+                <div class="faq-answer">
+                    Registration costs only KSh 500, giving you lifetime access to our platform, direct messaging with employers/investors, and eligibility for weekly funding rounds.
                 </div>
-
-                <!-- Duplicate for seamless loop -->
-                <div class="partner-card">
-                    <div class="partner-logo">TC</div>
-                    <h4 class="partner-name">TechCorp Kenya</h4>
-                    <p class="partner-type">Technology Partner</p>
-                    <p class="partner-description">Leading technology solutions provider offering innovative career opportunities and startup funding.</p>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>How quickly can I get hired or funded?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
                 </div>
-
-                <div class="partner-card">
-                    <div class="partner-logo">GV</div>
-                    <h4 class="partner-name">GreenVentures</h4>
-                    <p class="partner-type">Investment Partner</p>
-                    <p class="partner-description">Sustainable business investor focused on funding environmentally conscious startups.</p>
+                <div class="faq-answer">
+                    Most users receive responses within 48-72 hours. Job placements typically happen within 2-4 weeks, while funding decisions are made during our weekly review meetings.
                 </div>
-
-                <div class="partner-card">
-                    <div class="partner-logo">FF</div>
-                    <h4 class="partner-name">FinanceFirst</h4>
-                    <p class="partner-type">Financial Partner</p>
-                    <p class="partner-description">Premier financial services company providing funding solutions and advisory services.</p>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>What types of jobs are available?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
                 </div>
-
-                <div class="partner-card">
-                    <div class="partner-logo">MI</div>
-                    <h4 class="partner-name">MobileInnovate</h4>
-                    <p class="partner-type">Innovation Partner</p>
-                    <p class="partner-description">Mobile technology leader creating next-generation digital solutions.</p>
+                <div class="faq-answer">
+                    We connect job seekers with opportunities across tech, finance, marketing, sales, operations, and more. Positions range from entry-level to senior management roles.
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>How does the funding process work?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    Submit your business pitch through our platform. Investors review pitches weekly and reach out directly to entrepreneurs they want to fund. Funding ranges from KSh 100,000 to 400,000.
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Is my information secure?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    Yes! We use bank-level encryption to protect your data. Your profile is only visible to verified employers and investors, and you control who can contact you.
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <script>
-        // Mobile menu toggle
-        function toggleMobileMenu() {
-            const mobileMenu = document.getElementById('mobileMenu');
-            mobileMenu.classList.toggle('active');
-        }
+<!-- Final CTA Section -->
+<section class="final-cta-section">
+    <div class="container">
+        <h2>Ready to Transform Your Future?</h2>
+        <p>Your next big opportunity is one conversation away. Join thousands of Kenyans who've already found success.</p>
+        <a href="{% url 'accounts:signup_with_payment' %}" class="cta-primary-btn">
+            Join Now for KSh 500 <i class="fas fa-arrow-right"></i>
+        </a>
+        <div class="cta-price">
+            One-time payment - Lifetime access - No hidden fees
+        </div>
+    </div>
+</section>
+{% endblock %}
 
-        // Navbar scroll effect
-        window.addEventListener('scroll', function() {
-            const navbar = document.getElementById('navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
+{% block extra_js %}
+<script>
+    // Smooth Scroll for Anchor Links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
             }
         });
+    });
 
-        // Smooth scrolling for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
+    // Company Carousel
+    let currentSlide = 0;
+    const carousel = document.getElementById('companiesCarousel');
+    const cards = document.querySelectorAll('.company-card');
+    const totalCards = cards.length;
+    let cardsPerView = window.innerWidth < 768 ? 1 : window.innerWidth < 1024 ? 2 : 3;
 
-                // Close mobile menu if open
-                const mobileMenu = document.getElementById('mobileMenu');
-                mobileMenu.classList.remove('active');
-            });
+    function updateCardsPerView() {
+        cardsPerView = window.innerWidth < 768 ? 1 : window.innerWidth < 1024 ? 2 : 3;
+        goToSlide(currentSlide);
+    }
+
+    function createDots() {
+        const dotsContainer = document.getElementById('carouselDots');
+        const totalDots = Math.ceil(totalCards / cardsPerView);
+        dotsContainer.innerHTML = '';
+
+        for (let i = 0; i < totalDots; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'carousel-dot';
+            if (i === 0) dot.classList.add('active');
+            dot.onclick = () => goToSlide(i);
+            dotsContainer.appendChild(dot);
+        }
+    }
+
+    function updateDots() {
+        const dots = document.querySelectorAll('.carousel-dot');
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === Math.floor(currentSlide / cardsPerView));
         });
-    </script>
-</body>
-</html>
+    }
+
+    function goToSlide(slideIndex) {
+        const maxSlide = totalCards - cardsPerView;
+        currentSlide = Math.max(0, Math.min(slideIndex * cardsPerView, maxSlide));
+        const cardWidth = cards[0].offsetWidth;
+        const gap = 32;
+        const offset = -(currentSlide * (cardWidth + gap));
+        carousel.style.transform = `translateX(${offset}px)`;
+        updateDots();
+    }
+
+    function moveCarousel(direction) {
+        const newSlide = currentSlide + (direction * cardsPerView);
+        const maxSlide = totalCards - cardsPerView;
+
+        if (newSlide >= 0 && newSlide <= maxSlide) {
+            currentSlide = newSlide;
+            const cardWidth = cards[0].offsetWidth;
+            const gap = 32;
+            const offset = -(currentSlide * (cardWidth + gap));
+            carousel.style.transform = `translateX(${offset}px)`;
+            updateDots();
+        }
+    }
+
+    // Auto-slide every 5 seconds
+    setInterval(() => {
+        const maxSlide = totalCards - cardsPerView;
+        if (currentSlide >= maxSlide) {
+            goToSlide(0);
+        } else {
+            moveCarousel(1);
+        }
+    }, 5000);
+
+    // Initialize carousel
+    window.addEventListener('load', () => {
+        createDots();
+        updateCardsPerView();
+    });
+
+    window.addEventListener('resize', updateCardsPerView);
+
+    // Intersection Observer for Animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Observe all animated elements
+    document.querySelectorAll('.section-header, .step-card, .value-item, .faq-item').forEach(el => {
+        observer.observe(el);
+    });
+
+    // Testimonial Carousel
+    let currentTestimonial = 0;
+    const testimonials = document.querySelectorAll('.testimonial-card');
+    const dots = document.querySelectorAll('.testimonials-carousel .dot');
+
+    function showSlide(index) {
+        testimonials.forEach((slide, i) => {
+            slide.classList.remove('active');
+            dots[i].classList.remove('active');
+        });
+
+        testimonials[index].classList.add('active');
+        dots[index].classList.add('active');
+        currentTestimonial = index;
+    }
+
+    // Auto-rotate testimonials
+    setInterval(() => {
+        currentTestimonial = (currentTestimonial + 1) % testimonials.length;
+        showSlide(currentTestimonial);
+    }, 5000);
+
+    // Manual dot navigation
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            showSlide(index);
+        });
+    });
+
+    // FAQ Accordion
+    document.querySelectorAll('.faq-question').forEach(question => {
+        question.addEventListener('click', () => {
+            const faqItem = question.parentElement;
+            const wasActive = faqItem.classList.contains('active');
+
+            // Close all FAQs
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Open clicked FAQ if it wasn't active
+            if (!wasActive) {
+                faqItem.classList.add('active');
+            }
+        });
+    });
+
+    // Scroll Indicator Click
+    document.querySelector('.scroll-indicator')?.addEventListener('click', () => {
+        document.querySelector('.companies-section').scrollIntoView({
+            behavior: 'smooth'
+        });
+    });
+</script>
+{% endblock %}
