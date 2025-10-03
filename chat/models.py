@@ -1,6 +1,56 @@
 import uuid
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
+import os
+
+
+# Validation functions
+def validate_file_size(file):
+    """Validate file size"""
+    max_size = 20 * 1024 * 1024  # 20MB
+    if file.size > max_size:
+        raise ValidationError('File size cannot exceed 20MB')
+
+
+def validate_file_extension(filename):
+    """Validate file extension"""
+    allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt']
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in allowed_extensions:
+        raise ValidationError(f'File extension {ext} is not allowed')
+
+
+def validate_file_content(file):
+    """Validate actual file content using magic numbers (requires python-magic)"""
+    allowed_mime_types = [
+        'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+        'application/pdf', 'text/plain'
+    ]
+
+    try:
+        import magic
+        # Read first 1KB to determine file type
+        file_start = file.read(1024)
+        file.seek(0)  # Reset file pointer
+
+        # Get MIME type from actual content
+        file_mime = magic.from_buffer(file_start, mime=True)
+
+        if file_mime not in allowed_mime_types:
+            raise ValidationError(f'File content type {file_mime} is not allowed')
+    except ImportError:
+        # python-magic not installed, skip content validation
+        pass
+    except Exception as e:
+        raise ValidationError(f'Could not validate file: {str(e)}')
+
+
+def chat_file_upload_path(instance, filename):
+    """Generate upload path for chat files"""
+    ext = filename.split('.')[-1]
+    filename = f"{uuid.uuid4()}.{ext}"
+    return os.path.join('chat_files', str(instance.room.id), filename)
 
 
 class ChatRoom(models.Model):
@@ -24,12 +74,10 @@ class ChatRoom(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
 
-    # Remove unique_together since we now have multiple field combinations
     class Meta:
         ordering = ['-updated_at']
 
     def __str__(self):
-        # Handle different chat types
         if self.investor and self.regular_user:
             return f"Chat: {self.investor.username} - {self.regular_user.username}"
         elif self.participant_1 and self.participant_2:
@@ -73,14 +121,21 @@ class ChatRoom(models.Model):
         self.messages.filter(is_read=False).exclude(sender=user).update(is_read=True)
 
 
-# Keep your existing ChatMessage and UserActivity models unchanged
 class ChatMessage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_messages')
-    message = models.TextField()
+    message = models.TextField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
+
+    # File upload fields
+    file = models.FileField(upload_to=chat_file_upload_path, null=True, blank=True)
+    file_name = models.CharField(max_length=255, blank=True)
+    file_size = models.IntegerField(default=0)
+    file_type = models.CharField(max_length=100, blank=True)
+
+    # Delivery tracking
     delivered = models.BooleanField(default=False)
     delivered_at = models.DateTimeField(null=True, blank=True)
     read = models.BooleanField(default=False)
@@ -90,7 +145,34 @@ class ChatMessage(models.Model):
         ordering = ['-timestamp']
 
     def __str__(self):
-        return f"{self.sender.username}: {self.message[:50]}..."
+        if self.message:
+            return f"{self.sender.username}: {self.message[:50]}..."
+        elif self.file:
+            return f"{self.sender.username}: [File: {self.file_name}]"
+        return f"{self.sender.username}: [Empty message]"
+
+    def get_file_icon(self):
+        """Return appropriate FontAwesome icon based on file type"""
+        if not self.file_type:
+            return 'file'
+
+        if 'image' in self.file_type:
+            return 'file-image'
+        elif 'pdf' in self.file_type:
+            return 'file-pdf'
+        elif 'text' in self.file_type:
+            return 'file-alt'
+        else:
+            return 'file'
+
+    def format_file_size(self):
+        """Format file size in human readable format"""
+        size = self.file_size
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size < 1024.0:
+                return f"{size:.1f} {unit}"
+            size /= 1024.0
+        return f"{size:.1f} TB"
 
 
 class UserActivity(models.Model):

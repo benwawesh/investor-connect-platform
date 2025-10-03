@@ -86,17 +86,44 @@
         </div>
     </div>
 
+    <!-- File Preview (when file is selected) -->
+    <div id="filePreviewContainer" class="bg-white border-t px-4 py-2" style="display: none;">
+        <div class="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div class="flex items-center space-x-3">
+                <i class="text-blue-600 text-xl" id="fileIconPreview"></i>
+                <div>
+                    <p class="text-sm font-medium text-gray-900" id="fileNamePreview"></p>
+                    <p class="text-xs text-gray-500" id="fileSizePreview"></p>
+                </div>
+            </div>
+            <button type="button" id="removeFileBtn" class="text-red-600 hover:text-red-800">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
     <!-- Message Input -->
     <div class="bg-white rounded-b-lg shadow p-4">
-        <form id="messageForm" class="flex space-x-2">
-            <input type="text" id="messageInput" placeholder="Type your message..."
-                   class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                   disabled autocomplete="off">
-            <button type="submit" id="sendButton"
-                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                    disabled>
-                Send
-            </button>
+        <form id="messageForm" class="space-y-2" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="flex space-x-2">
+                <!-- File Upload Button -->
+                <label for="fileInput" class="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors" title="Attach file (Images, PDF, Text only - Max 20MB)">
+                    <i class="fas fa-paperclip text-gray-600"></i>
+                    <input type="file" id="fileInput" class="hidden"
+                           accept="image/*,.pdf,.txt" disabled>
+                </label>
+
+                <input type="text" id="messageInput" placeholder="Type your message..."
+                       class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       disabled autocomplete="off">
+
+                <button type="submit" id="sendButton"
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center"
+                        disabled>
+                    <i class="fas fa-paper-plane mr-2"></i> Send
+                </button>
+            </div>
         </form>
         <div class="mt-2 flex justify-between items-center">
             <span id="messageCount" class="text-xs text-gray-500">Loading...</span>
@@ -121,6 +148,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const typingIndicator = document.getElementById('typingIndicator');
     const connectionInfo = document.getElementById('connectionInfo');
 
+    // File upload elements
+    const fileInput = document.getElementById('fileInput');
+    const filePreviewContainer = document.getElementById('filePreviewContainer');
+    const fileNamePreview = document.getElementById('fileNamePreview');
+    const fileSizePreview = document.getElementById('fileSizePreview');
+    const fileIconPreview = document.getElementById('fileIconPreview');
+    const removeFileBtn = document.getElementById('removeFileBtn');
+
     // State variables
     let totalMessages = 0;
     let isConnected = false;
@@ -129,18 +164,94 @@ document.addEventListener('DOMContentLoaded', function() {
     let typingTimer = null;
     let otherUserIsOnline = false;
     let otherUserName = '';
+    let selectedFile = null;
 
-    // Get other user's username for profile links - safe fallback
+    // Rate limiting tracking
+    let fileUploadCount = parseInt(localStorage.getItem('fileUploadCount') || '0');
+    let lastUploadReset = parseInt(localStorage.getItem('lastUploadReset') || Date.now());
+
+    // Reset counter daily
+    if (Date.now() - lastUploadReset > 86400000) {
+        fileUploadCount = 0;
+        lastUploadReset = Date.now();
+        localStorage.setItem('fileUploadCount', '0');
+        localStorage.setItem('lastUploadReset', lastUploadReset.toString());
+    }
+
+    // Get other user's username
     const otherUsername = '{{ other_user.username|default:"" }}';
-
-    // WebSocket setup
     const roomId = '{{ chat_room.id }}';
     const currentUserId = {{ user.id }};
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsPath = `${protocol}//${window.location.host}/ws/chat/${roomId}/`;
 
-    console.log('🔌 Connecting to enhanced WebSocket:', wsPath);
+    console.log('Connecting to WebSocket:', wsPath);
     let chatSocket = new WebSocket(wsPath);
+
+    // File upload handlers
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Check upload limit
+            if (fileUploadCount >= 50) {
+                alert('Daily upload limit reached (50 files). Please try again tomorrow.');
+                fileInput.value = '';
+                return;
+            }
+
+            // Check file size - 5MB limit
+            if (file.size > 20 * 1024 * 1024) {
+                alert('File size exceeds 20MB limit');
+                fileInput.value = '';
+                return;
+            }
+
+            // Validate extension
+            const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt'];
+            const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+            if (!allowedExtensions.includes(fileExt)) {
+                alert('File type not allowed. Allowed: Images, PDF, Text files only');
+                fileInput.value = '';
+                return;
+            }
+
+            selectedFile = file;
+            showFilePreview(file);
+        }
+    });
+
+    removeFileBtn.addEventListener('click', function() {
+        clearFileSelection();
+    });
+
+    function showFilePreview(file) {
+        fileNamePreview.textContent = file.name;
+        fileSizePreview.textContent = formatFileSize(file.size);
+        const iconClass = getFileIcon(file.type);
+        fileIconPreview.className = `fas fa-${iconClass} text-blue-600 text-xl`;
+        filePreviewContainer.style.display = 'block';
+    }
+
+    function clearFileSelection() {
+        selectedFile = null;
+        fileInput.value = '';
+        filePreviewContainer.style.display = 'none';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    function getFileIcon(mimeType) {
+        if (mimeType.startsWith('image/')) return 'file-image';
+        if (mimeType.includes('pdf')) return 'file-pdf';
+        if (mimeType.includes('text')) return 'file-alt';
+        return 'file';
+    }
 
     // Utility functions
     function scrollToBottom() {
@@ -154,17 +265,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function formatLastSeen(isoString) {
         if (!isoString) return 'Unknown';
-
         const date = new Date(isoString);
         const now = new Date();
         const diffMinutes = Math.floor((now - date) / (1000 * 60));
-
         if (diffMinutes < 1) return 'Just now';
         if (diffMinutes < 60) return `${diffMinutes}m ago`;
-
         const diffHours = Math.floor(diffMinutes / 60);
         if (diffHours < 24) return `${diffHours}h ago`;
-
         const diffDays = Math.floor(diffHours / 24);
         return `${diffDays}d ago`;
     }
@@ -177,7 +284,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateOtherUserStatus(username, isOnline, lastSeen) {
         otherUserName = username;
         otherUserIsOnline = isOnline;
-
         if (isOnline) {
             otherUserStatus.innerHTML = `<span class="text-green-600">● Online</span>`;
         } else {
@@ -223,7 +329,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Function to make message usernames clickable
     function makeMessageUserNameClickable(messageElement, username) {
         const userNameSpan = messageElement.querySelector('.message-username');
         if (userNameSpan && username !== '{{ user.username }}' && username) {
@@ -241,12 +346,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Add message with enhanced features and clickable usernames
+    // Add message with file support
     function addMessage(data, isNewMessage = false) {
         hideLoadingText();
-
         const isOwnMessage = data.is_own_message || (data.sender_id === currentUserId);
-
         const messageDiv = document.createElement('div');
         messageDiv.className = `mb-3 ${isOwnMessage ? 'text-right' : 'text-left'}`;
         messageDiv.setAttribute('data-message-id', data.message_id || 'temp');
@@ -254,10 +357,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const bubbleClass = isOwnMessage ?
             'bg-blue-600 text-white' :
             'bg-white border border-gray-200 text-gray-900';
-
         const timeClass = isOwnMessage ? 'text-blue-100' : 'text-gray-500';
 
-        // Message status indicators
         let statusIcon = '';
         if (isOwnMessage) {
             if (data.read) {
@@ -269,19 +370,46 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // New message indicator
         const newIndicator = isNewMessage ?
             '<span class="text-xs opacity-75 animate-pulse mr-1">●</span>' : '';
-
-        // Make username clickable for other users
         const usernameClass = !isOwnMessage ? 'message-username' : '';
+
+        // Build file attachment HTML if present
+        let fileHTML = '';
+        if (data.file) {
+            const isImage = data.file.type && data.file.type.startsWith('image/');
+            if (isImage) {
+                fileHTML = `
+                    <div class="mt-2">
+                        <a href="${data.file.url}" target="_blank" class="block">
+                            <img src="${data.file.url}" alt="${data.file.name}"
+                                 class="max-w-xs rounded-lg border ${isOwnMessage ? 'border-blue-400' : 'border-gray-300'}">
+                        </a>
+                        <p class="text-xs mt-1 ${timeClass}">${data.file.name}</p>
+                    </div>
+                `;
+            } else {
+                fileHTML = `
+                    <a href="${data.file.url}" target="_blank" download
+                       class="mt-2 flex items-center space-x-2 p-2 rounded ${isOwnMessage ? 'bg-blue-500' : 'bg-gray-100'} hover:opacity-80 transition-opacity">
+                        <i class="fas fa-${data.file.icon || 'file'} text-lg"></i>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium truncate">${data.file.name}</p>
+                            <p class="text-xs ${timeClass}">${data.file.size}</p>
+                        </div>
+                        <i class="fas fa-download text-sm"></i>
+                    </a>
+                `;
+            }
+        }
 
         messageDiv.innerHTML = `
             <div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${bubbleClass}">
                 <div class="text-xs mb-1 opacity-75 ${usernameClass}">
                     ${newIndicator}${isOwnMessage ? 'You' : data.sender_name}
                 </div>
-                <p class="text-sm break-words">${data.message}</p>
+                ${data.message ? `<p class="text-sm break-words">${data.message}</p>` : ''}
+                ${fileHTML}
                 <div class="flex justify-between items-center mt-1">
                     <span class="text-xs ${timeClass}">
                         ${formatTime(data.timestamp)}
@@ -292,33 +420,23 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
 
         messagesList.appendChild(messageDiv);
-
-        // Make username clickable if it's from another user
         if (!isOwnMessage && data.sender_name) {
             makeMessageUserNameClickable(messageDiv, data.sender_name);
         }
-
         totalMessages++;
         updateMessageCount();
         scrollToBottom();
-
-        // Mark message as read if it's from another user and we're online
         if (!isOwnMessage && isConnected && data.message_id) {
             setTimeout(() => markMessageAsRead(data.message_id), 1000);
         }
-
-        // Animation for new messages
         if (isNewMessage) {
             messageDiv.style.animation = 'messageFlash 1s ease-out';
-
-            // Sound for messages from others
             if (!isOwnMessage) {
                 playNotificationSound();
             }
         }
     }
 
-    // Update message read status
     function updateMessageReadStatus(messageId) {
         const messageDiv = document.querySelector(`[data-message-id="${messageId}"]`);
         if (messageDiv) {
@@ -330,88 +448,76 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Play notification sound
     function playNotificationSound() {
         try {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
-
             oscillator.frequency.value = 800;
             oscillator.type = 'sine';
-
             gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + 0.1);
         } catch (e) {
-            console.log('🔇 Could not play notification sound');
+            console.log('Could not play notification sound');
         }
     }
 
     // WebSocket event handlers
     chatSocket.onopen = function(e) {
-        console.log('✅ Enhanced WebSocket connected');
+        console.log('WebSocket connected');
         updateConnectionStatus('Connected', 'bg-green-200', 'text-green-800');
-        connectionInfo.textContent = 'Real-time chat with read receipts';
+        connectionInfo.textContent = 'Secure file sharing (Images, PDF, Text - 20MB max)';
         isConnected = true;
         messageInput.disabled = false;
+        fileInput.disabled = false;
         sendButton.disabled = false;
         messageInput.focus();
     };
 
     chatSocket.onclose = function(e) {
-        console.log('❌ WebSocket disconnected:', e.code);
+        console.log('WebSocket disconnected');
         updateConnectionStatus('Disconnected', 'bg-red-200', 'text-red-800');
         connectionInfo.textContent = 'Connection lost';
         isConnected = false;
         messageInput.disabled = true;
+        fileInput.disabled = true;
         sendButton.disabled = true;
         hideTypingIndicator();
     };
 
     chatSocket.onerror = function(e) {
-        console.error('⚠️ WebSocket error:', e);
+        console.error('WebSocket error');
         updateConnectionStatus('Error', 'bg-red-200', 'text-red-800');
         connectionInfo.textContent = 'Connection error';
         isConnected = false;
         messageInput.disabled = true;
+        fileInput.disabled = true;
         sendButton.disabled = true;
     };
 
     chatSocket.onmessage = function(e) {
         try {
             const data = JSON.parse(e.data);
-            console.log('📨 Received:', data.type, data);
-
             switch(data.type) {
                 case 'connection_established':
-                    console.log('✅ Connection confirmed with enhanced features');
+                    console.log('Connection confirmed');
                     break;
-
                 case 'existing_message':
                     addMessage(data, false);
                     break;
-
                 case 'new_message':
                     addMessage(data, true);
-                    console.log('🚀 New message with delivery status');
                     break;
-
                 case 'user_status':
                     updateOtherUserStatus(data.username, data.is_online, data.last_seen);
-                    console.log(`👤 ${data.username} is ${data.is_online ? 'online' : 'offline'}`);
                     break;
-
                 case 'message_read':
                     updateMessageReadStatus(data.message_id);
-                    console.log(`👀 Message read by ${data.read_by_username}`);
                     break;
-
                 case 'typing_status':
                     if (data.is_typing) {
                         showTypingIndicator(data.username);
@@ -419,35 +525,65 @@ document.addEventListener('DOMContentLoaded', function() {
                         hideTypingIndicator();
                     }
                     break;
-
                 case 'error':
-                    console.error('❌ Server error:', data.message);
+                    console.error('Server error:', data.message);
                     alert('Error: ' + data.message);
                     break;
             }
-
         } catch (error) {
-            console.error('💥 Error parsing message:', error);
+            console.error('Error parsing message:', error);
         }
     };
 
-    // Handle form submission
-    messageForm.addEventListener('submit', function(e) {
+    // Handle form submission with file upload
+    messageForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-
         const message = messageInput.value.trim();
-        if (!message || !isConnected) return;
 
-        console.log('📤 Sending enhanced message:', message);
+        if (!message && !selectedFile) return;
+        if (!isConnected && !selectedFile) return;
 
-        // Send via WebSocket
-        chatSocket.send(JSON.stringify({
-            'type': 'chat_message',
-            'message': message
-        }));
+        // If we have a file, use AJAX to upload
+        if (selectedFile) {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            if (message) {
+                formData.append('message', message);
+            }
 
-        // Clear input and stop typing
-        messageInput.value = '';
+            try {
+                const response = await fetch(`/chat/${roomId}/send/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    console.log('File uploaded successfully');
+                    // Update rate limit counter
+                    fileUploadCount++;
+                    localStorage.setItem('fileUploadCount', fileUploadCount.toString());
+                    clearFileSelection();
+                    messageInput.value = '';
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Failed to upload file');
+            }
+        } else if (message) {
+            // No file, use WebSocket
+            chatSocket.send(JSON.stringify({
+                'type': 'chat_message',
+                'message': message
+            }));
+            messageInput.value = '';
+        }
+
         if (isTyping) {
             sendTypingStatus(false);
             isTyping = false;
@@ -461,7 +597,6 @@ document.addEventListener('DOMContentLoaded', function() {
             sendTypingStatus(true);
             isTyping = true;
         }
-
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
             if (isTyping) {
@@ -471,7 +606,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1000);
     });
 
-    // Auto-focus on input
     if (messageInput) {
         messageInput.focus();
     }
@@ -485,16 +619,13 @@ style.textContent = `
         50% { transform: scale(1.02); background-color: rgba(59, 130, 246, 0.2); }
         100% { transform: scale(1); background-color: transparent; }
     }
-
     .animate-pulse {
         animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
-
     @keyframes pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
     }
-
     .message-username:hover {
         text-decoration: underline !important;
         color: #2563eb !important;

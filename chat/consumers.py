@@ -182,7 +182,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     # Handle broadcasted messages
     async def broadcast_message(self, event):
-        await self.send(text_data=json.dumps({
+        message_data = {
             'type': 'new_message',
             'message': event['message'],
             'sender_id': event['sender_id'],
@@ -192,11 +192,38 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'delivered': event['delivered'],
             'read': event['read'],
             'is_own_message': event['sender_id'] == self.user.id
-        }))
+        }
+
+        # Add file data if present in the event
+        if 'file' in event:
+            message_data['file'] = event['file']
+
+        await self.send(text_data=json.dumps(message_data))
         # Remove only these lines:
         # if event['sender_id'] != self.user.id:
         #     print(f"DEBUG: Sending notification update to user {self.user.id}")
         #     await self.send_notification_update(self.user.id)
+
+    async def chat_message(self, event):
+        """Handle messages sent from the view (file uploads via AJAX)"""
+        message_data = {
+            'type': 'new_message',
+            'message': event.get('message', ''),
+            'sender_id': event['sender_id'],
+            'sender_name': event['sender_name'],
+            'timestamp': event['timestamp'],
+            'message_id': event['message_id'],
+            'delivered': event.get('delivered', False),
+            'read': event.get('read', False),
+            'is_own_message': event['sender_id'] == self.user.id
+        }
+
+        # Add file data if present
+        if 'file' in event:
+            message_data['file'] = event['file']
+
+        await self.send(text_data=json.dumps(message_data))
+
     # Handle user status updates
     async def user_status_update(self, event):
         # Don't send status updates about yourself
@@ -296,8 +323,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             room = ChatRoom.objects.get(id=self.room_id)
             messages = room.messages.all().order_by('timestamp')
-            return [
-                {
+
+            message_list = []
+            for msg in messages:
+                message_data = {
                     'id': str(msg.id),
                     'message': msg.message,
                     'sender_id': msg.sender.id,
@@ -306,8 +335,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'delivered': getattr(msg, 'delivered', True),
                     'read': getattr(msg, 'read', False)
                 }
-                for msg in messages
-            ]
+
+                # Add file data if message has a file
+                if msg.file:
+                    message_data['file'] = {
+                        'url': msg.file.url,
+                        'name': msg.file_name,
+                        'size': msg.format_file_size(),
+                        'type': msg.file_type,
+                        'icon': msg.get_file_icon(),
+                    }
+
+                message_list.append(message_data)
+
+            return message_list
         except Exception as e:
             print(f"Error loading messages: {e}")
             return []
@@ -349,7 +390,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         messages = await self.get_existing_messages()
 
         for msg in messages:
-            await self.send(text_data=json.dumps({
+            message_data = {
                 'type': 'existing_message',
                 'message': msg['message'],
                 'sender_id': msg['sender_id'],
@@ -359,7 +400,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'delivered': msg['delivered'],
                 'read': msg['read'],
                 'is_own_message': msg['sender_id'] == self.user.id
-            }))
+            }
+
+            # Add file data if present
+            if 'file' in msg:
+                message_data['file'] = msg['file']
+
+            await self.send(text_data=json.dumps(message_data))
 
         # Send other user's online status
         other_user_status = await self.get_other_user_status()
@@ -373,7 +420,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }))
 
         print(f"Sent {len(messages)} messages and user status to {self.user}")
-
     # Add this method to your existing ChatConsumer class
     async def send_notification_update(self, recipient_user_id):
         """Send notification update to specific user"""

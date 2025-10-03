@@ -87,6 +87,31 @@ DATABASES = {
     }
 }
 
+# More restrictive file types
+ALLOWED_CHAT_FILE_TYPES = [
+    # Images (common and safe)
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+
+    # Documents (read-only formats preferred)
+    'application/pdf',
+
+    # Text
+    'text/plain',
+]
+
+
+# Add these security settings
+SECURE_FILE_UPLOAD_SETTINGS = {
+    'MAX_FILE_SIZE': 20 * 1024 * 1024,  # 5MB
+    'ALLOWED_EXTENSIONS': ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt'],
+    'SCAN_FILES': True,  # Enable if you add virus scanning
+    'MAX_FILES_PER_USER_PER_DAY': 50,  # Rate limiting
+    'MAX_FILES_PER_MESSAGE': 1,
+}
+
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
@@ -122,8 +147,8 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # File upload settings
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024  # 10MB
 
 # Default primary key field type
 

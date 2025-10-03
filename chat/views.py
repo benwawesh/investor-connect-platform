@@ -1,5 +1,5 @@
 # chat/views.py - Updated with admin support
-
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -11,6 +11,9 @@ from .models import ChatRoom, ChatMessage, UserActivity
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.db import models
+from django.conf import settings
+import os
+import re
 
 User = get_user_model()
 
@@ -244,9 +247,10 @@ def start_chat_with_user(request, username):
 
 
 # Keep your existing send_message, test_chat_room, update_activity, and typing_status views unchanged
+
 @login_required
 def send_message(request, room_id):
-    """Send a message via AJAX"""
+    """Send a message with secure file attachment"""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid method'})
 
@@ -263,8 +267,65 @@ def send_message(request, room_id):
         return JsonResponse({'success': False, 'error': 'Access denied'})
 
     message_text = request.POST.get('message', '').strip()
-    if not message_text:
-        return JsonResponse({'success': False, 'error': 'Message cannot be empty'})
+    uploaded_file = request.FILES.get('file')
+
+    # Must have either message or file
+    if not message_text and not uploaded_file:
+        return JsonResponse({'success': False, 'error': 'Message or file is required'})
+
+    # SECURITY: Rate limiting - check recent uploads
+    if uploaded_file:
+        recent_uploads = ChatMessage.objects.filter(
+            sender=request.user,
+            timestamp__gte=timezone.now() - timezone.timedelta(days=1),
+            file__isnull=False
+        ).count()
+
+        if recent_uploads >= 50:
+            return JsonResponse({'success': False, 'error': 'Daily upload limit reached. Please try again tomorrow.'})
+
+    # Validate file if present
+    safe_filename = None
+    if uploaded_file:
+        safe_filename = uploaded_file.name
+        try:
+            # 1. Check file size
+            if uploaded_file.size > 20 * 1024 * 1024:
+                return JsonResponse({'success': False, 'error': 'File size exceeds 5MB limit'})
+
+            # 2. Validate extension
+            allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt']
+            file_ext = os.path.splitext(uploaded_file.name)[1].lower()
+            if file_ext not in allowed_extensions:
+                return JsonResponse({'success': False, 'error': f'File type {file_ext} not allowed'})
+
+            # 3. Check MIME type from content (not just extension)
+            allowed_types = getattr(settings, 'ALLOWED_CHAT_FILE_TYPES', [])
+            if allowed_types and uploaded_file.content_type not in allowed_types:
+                return JsonResponse({'success': False, 'error': 'Invalid file type'})
+
+            # 3.5 Optional: Validate actual file content (requires python-magic)
+            try:
+                from .models import validate_file_content
+                validate_file_content(uploaded_file)
+            except ImportError:
+                pass  # python-magic not installed, skip content validation
+            except ValidationError as e:
+                return JsonResponse({'success': False, 'error': str(e)})
+
+            # 4. Sanitize filename - remove special characters
+            safe_filename = re.sub(r'[^\w\s.-]', '', uploaded_file.name)
+            uploaded_file.name = safe_filename
+
+            # 5. Check for executable content in filename
+            dangerous_extensions = ['.exe', '.bat', '.cmd', '.sh', '.ps1', '.dll', '.so']
+            if any(uploaded_file.name.lower().endswith(ext) for ext in dangerous_extensions):
+                return JsonResponse({'success': False, 'error': 'Executable files are not allowed'})
+
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': 'File validation failed'})
 
     # Create message
     message = ChatMessage.objects.create(
@@ -273,15 +334,60 @@ def send_message(request, room_id):
         message=message_text
     )
 
-    return JsonResponse({
+    # Handle file upload
+    if uploaded_file:
+        message.file = uploaded_file
+        message.file_name = safe_filename
+        message.file_size = uploaded_file.size
+        message.file_type = uploaded_file.content_type
+        message.save()
+
+    # Broadcast via WebSocket
+    channel_layer = get_channel_layer()
+    room_group_name = f'chat_{room_id}'
+
+    message_data = {
+        'type': 'chat_message',
+        'message_id': str(message.id),
+        'message': message.message,
+        'sender_id': message.sender.id,
+        'sender_name': message.sender.username,
+        'timestamp': message.timestamp.isoformat(),
+        'delivered': message.delivered,
+        'read': message.read,
+    }
+
+    if message.file:
+        message_data['file'] = {
+            'url': request.build_absolute_uri(message.file.url),
+            'name': message.file_name,
+            'size': message.format_file_size(),
+            'type': message.file_type,
+            'icon': message.get_file_icon(),
+        }
+
+    async_to_sync(channel_layer.group_send)(room_group_name, message_data)
+
+    response_data = {
         'success': True,
         'message': {
             'id': str(message.id),
             'text': message.message,
             'created_at': message.timestamp.strftime('%H:%M'),
-            'sender_id': message.sender.id
+            'sender_id': message.sender.id,
         }
-    })
+    }
+
+    if message.file:
+        response_data['message']['file'] = {
+            'url': message.file.url,
+            'name': message.file_name,
+            'size': message.format_file_size(),
+            'type': message.file_type,
+            'icon': message.get_file_icon(),
+        }
+
+    return JsonResponse(response_data)
 
 
 @login_required
