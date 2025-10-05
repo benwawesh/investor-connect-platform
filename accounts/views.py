@@ -100,7 +100,7 @@ def signup_with_payment(request):
             request.session['signup_data'] = {
                 'username': username,
                 'email': email,
-                'password': form.cleaned_data['password1'],
+                'password': make_password(form.cleaned_data['password1']),
                 'phone_number': formatted_phone,
                 'first_name': form.cleaned_data.get('first_name', ''),
                 'last_name': form.cleaned_data.get('last_name', ''),

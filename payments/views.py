@@ -323,17 +323,15 @@ def create_user_from_payment_transaction(payment_transaction):
                 logger.warning(f"Email {payment_transaction.temp_email} already exists")
                 return
 
-            if CustomUser.objects.filter(phone_number=payment_transaction.phone_number).exists():
-                logger.warning(f"Phone number {payment_transaction.phone_number} already exists")
-                return
+            # if CustomUser.objects.filter(phone_number=payment_transaction.phone_number).exists():
+            #     logger.warning(f"Phone number {payment_transaction.phone_number} already exists")
+            #     return
 
             # Create the user account
             user = CustomUser.objects.create(
                 username=payment_transaction.temp_username,
                 email=payment_transaction.temp_email,
-                password=make_password(payment_transaction.temp_password) if hasattr(payment_transaction,
-                                                                                     'temp_password') else make_password(
-                    'TempPassword123!'),
+                password=make_password(payment_transaction.temp_password),
                 phone_number=payment_transaction.phone_number,
                 user_type=payment_transaction.temp_user_type if hasattr(payment_transaction,
                                                                         'temp_user_type') else 'regular',
