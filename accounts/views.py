@@ -8,6 +8,7 @@ from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from chat.models import ChatRoom, SupportTicket, ChatMessage
 import json
 import uuid
 import logging
@@ -19,6 +20,7 @@ from payments.models import SubscriptionPayment,PlatformSettings
 from django.conf import settings
 from pitches.models import IdeaPitch
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
 
 # Profile management form imports
 from .forms import (
@@ -764,15 +766,94 @@ def get_user_stats(user):
         }
 
 
-# In accounts/views.py
 @login_required
 def contact_admin(request):
-    """Start a chat with any available admin"""
-    # Get the first available admin (you could make this more sophisticated)
-    admin_user = CustomUser.objects.filter(is_staff=True, is_active=True).first()
+    if request.method == 'POST':
+        # Create chat room with admin
+        admin_user = CustomUser.objects.filter(is_staff=True).first()
 
-    if not admin_user:
-        messages.error(request, "No administrators are currently available.")
-        return redirect('accounts:dashboard')
+        if not admin_user:
+            messages.error(request, 'No admin available. Please try again later.')
+            return redirect('accounts:contact_admin')
 
-    return redirect('chat:start_chat', username=admin_user.username)
+        # Create chat room
+        chat_room = ChatRoom.objects.create(
+            participant_1=request.user,
+            participant_2=admin_user,
+            is_active=True
+        )
+
+        # Create support ticket
+        ticket = SupportTicket.objects.create(
+            user=request.user,
+            chat_room=chat_room,
+            subject=request.POST['subject'],
+            category=request.POST.get('category', 'other'),
+            priority=request.POST.get('priority', 'normal'),
+            status='open'
+        )
+
+        # Create first message
+        initial_message = request.POST.get('message', '')
+        if initial_message:
+            ChatMessage.objects.create(
+                room=chat_room,
+                sender=request.user,
+                message=initial_message,
+                is_read=False
+            )
+
+        messages.success(request, f'Support ticket #{ticket.id} created! An admin will respond soon.')
+        return redirect('chat:chat_room', room_id=chat_room.id)
+
+    # Get user's existing tickets
+    user_tickets = SupportTicket.objects.filter(user=request.user)
+
+    return render(request, 'accounts/contact_admin.html', {
+        'user_tickets': user_tickets
+    })
+
+
+@login_required
+def manage_cv(request):
+    """Separate page for CV upload and management"""
+    user = request.user
+    profile_extension = user.userprofileextension
+
+    if request.method == 'POST':
+        if 'upload_cv' in request.POST:
+            # Handle CV upload
+            cv_file = request.FILES.get('resume')
+            if cv_file:
+                # Delete old CV if exists
+                if profile_extension.resume:
+                    old_cv_path = profile_extension.resume.path
+                    if os.path.exists(old_cv_path):
+                        os.remove(old_cv_path)
+
+                # Save new CV
+                profile_extension.resume = cv_file
+                profile_extension.save()
+                messages.success(request, 'CV uploaded successfully!')
+            else:
+                messages.error(request, 'Please select a file to upload.')
+
+        elif 'delete_cv' in request.POST:
+            # Handle CV deletion
+            if profile_extension.resume:
+                cv_path = profile_extension.resume.path
+                if os.path.exists(cv_path):
+                    os.remove(cv_path)
+                profile_extension.resume = None
+                profile_extension.save()
+                messages.success(request, 'CV deleted successfully!')
+            else:
+                messages.error(request, 'No CV to delete.')
+
+        return redirect('accounts:manage_cv')
+
+    context = {
+        'user': user,
+        'profile_extension': profile_extension,
+    }
+    return render(request, 'accounts/manage_cv.html', context)

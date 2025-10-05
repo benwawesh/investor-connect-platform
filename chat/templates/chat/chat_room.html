@@ -13,7 +13,13 @@
                 </a>
                 <div class="flex items-center space-x-3">
                     <!-- Profile Picture -->
-                    {% if other_user and other_user.username %}
+                   <!-- Profile Picture -->
+                    {% if is_support_ticket and not user.is_staff %}
+                        <!-- Support Team icon (not clickable) -->
+                        <div class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center border-2 border-gray-200">
+                            <i class="fas fa-headset text-white"></i>
+                        </div>
+                    {% elif other_user and other_user.username %}
                         <a href="{% url 'accounts:profile_detail' username=other_user.username %}" class="flex-shrink-0">
                             {% if other_user.userprofileextension.profile_picture %}
                                 <img src="{{ other_user.userprofileextension.profile_picture.url }}"
@@ -38,7 +44,14 @@
                     <!-- Name and Status -->
                     <div>
                         <h2 class="text-xl font-semibold">
-                            {% if other_user and other_user.username %}
+                            {% if is_support_ticket and not user.is_staff %}
+                                <!-- User sees "Support Team" for support tickets -->
+                                <span class="flex items-center">
+                                    Support Team
+                                    <i class="fas fa-headset text-indigo-600 ml-2 text-sm" title="Support"></i>
+                                </span>
+                            {% elif other_user and other_user.username %}
+                                <!-- Regular chat or admin view -->
                                 <a href="{% url 'accounts:profile_detail' username=other_user.username %}"
                                    class="hover:text-blue-600 transition-colors flex items-center">
                                     {% if other_user.userprofileextension.get_full_name %}
@@ -70,6 +83,68 @@
         </div>
     </div>
 
+    <!-- Support Ticket Banner (ADD THIS) -->
+    {% if room.support_ticket %}
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-4">
+        <div class="flex justify-between items-center">
+            <div class="flex-1">
+                <div class="flex items-center gap-3 mb-1">
+                    <i class="fas fa-ticket-alt text-blue-600"></i>
+                    <span class="font-semibold text-gray-800">Support Ticket #{{ room.support_ticket.id|slice:":8" }}</span>
+                    <span class="text-gray-600">•</span>
+                    <span class="text-gray-700">{{ room.support_ticket.subject }}</span>
+                </div>
+                <div class="flex items-center gap-4 text-sm text-gray-600">
+                    <span><i class="fas fa-tag mr-1"></i>{{ room.support_ticket.get_category_display }}</span>
+                    <span><i class="fas fa-clock mr-1"></i>{{ room.support_ticket.created_at|timesince }} ago</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- Priority Badge -->
+                <span class="px-3 py-1 rounded-full text-xs font-semibold
+                    {% if room.support_ticket.priority == 'urgent' %}bg-red-100 text-red-800
+                    {% elif room.support_ticket.priority == 'high' %}bg-orange-100 text-orange-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ room.support_ticket.get_priority_display }}
+                </span>
+
+                <!-- Status Dropdown (Admin Only) -->
+                {% if user.is_staff %}
+                <form method="post" action="{% url 'admin_panel:update_ticket_status' ticket_id=room.support_ticket.id %}" class="inline-block">
+                    {% csrf_token %}
+                    <select name="status"
+                            class="px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500
+                            {% if room.support_ticket.status == 'open' %}bg-green-50 text-green-800
+                            {% elif room.support_ticket.status == 'in_progress' %}bg-blue-50 text-blue-800
+                            {% elif room.support_ticket.status == 'resolved' %}bg-gray-50 text-gray-800
+                            {% else %}bg-red-50 text-red-800{% endif %}"
+                            onchange="this.form.submit()">
+                        <option value="open" {% if room.support_ticket.status == 'open' %}selected{% endif %}>Open</option>
+                        <option value="in_progress" {% if room.support_ticket.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="resolved" {% if room.support_ticket.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                        <option value="closed" {% if room.support_ticket.status == 'closed' %}selected{% endif %}>Closed</option>
+                    </select>
+                </form>
+                {% else %}
+                <!-- User View - Status Badge Only -->
+                <span class="px-3 py-2 rounded-lg text-sm font-semibold
+                    {% if room.support_ticket.status == 'open' %}bg-green-100 text-green-800
+                    {% elif room.support_ticket.status == 'in_progress' %}bg-blue-100 text-blue-800
+                    {% elif room.support_ticket.status == 'resolved' %}bg-gray-100 text-gray-800
+                    {% else %}bg-red-100 text-red-800{% endif %}">
+                    <i class="fas fa-circle text-xs mr-1"></i>
+                    {{ room.support_ticket.get_status_display }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <!-- End Support Ticket Banner -->
+
+    <!-- Messages Container -->
+    <div class="bg-gray-50 border h-96 overflow-y-auto p-4" id="messagesContainer">
     <!-- Messages Container -->
     <div class="bg-gray-50 border h-96 overflow-y-auto p-4" id="messagesContainer">
         <div id="messagesList">
@@ -420,7 +495,8 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
 
         messagesList.appendChild(messageDiv);
-        if (!isOwnMessage && data.sender_name) {
+        // Only make username clickable if it's NOT "Support Team"
+        if (!isOwnMessage && data.sender_name && data.sender_name !== "Support Team") {
             makeMessageUserNameClickable(messageDiv, data.sender_name);
         }
         totalMessages++;

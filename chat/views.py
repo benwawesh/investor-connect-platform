@@ -31,6 +31,13 @@ def chat_list(request):
     # Build chat data with message history
     chat_data = []
     for room in chat_rooms:
+        # Check if this is a support ticket - ADD THIS
+        try:
+            support_ticket = room.support_ticket
+            is_support_ticket = True
+        except:
+            is_support_ticket = False
+
         # Determine who the other user is - handle both old and new chat types
         other_user = None
         other_user_type = ""
@@ -52,8 +59,10 @@ def chat_list(request):
             else:
                 other_user = room.participant_1
 
-            # Determine user type
-            if other_user.is_staff:
+            # Determine user type - UPDATED
+            if is_support_ticket and not request.user.is_staff:
+                other_user_type = "Support Team"
+            elif other_user.is_staff:
                 other_user_type = "Administrator"
             elif other_user.is_investor:
                 other_user_type = "Investor"
@@ -71,6 +80,7 @@ def chat_list(request):
                 'room': room,
                 'other_user': other_user,
                 'other_user_type': other_user_type,
+                'is_support_ticket': is_support_ticket,  # ADD THIS
                 'unread_count': unread_count,
                 'last_message': last_message,
                 'total_messages': total_messages,
@@ -84,7 +94,6 @@ def chat_list(request):
         'chat_data': chat_data,
         'total_chats': len(chat_data)
     })
-
 
 @login_required
 def chat_room(request, room_id):
@@ -107,6 +116,14 @@ def chat_room(request, room_id):
             return JsonResponse({'success': False, 'error': 'Access denied'})
         messages.error(request, "You don't have access to this chat.")
         return redirect('chat:chat_list')
+
+    # ADD THIS: Check if this is a support ticket
+    try:
+        support_ticket = chat_room.support_ticket
+        is_support_ticket = True
+    except:
+        support_ticket = None
+        is_support_ticket = False
 
     # Handle AJAX requests for getting messages
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.GET.get('get_messages'):
@@ -177,12 +194,17 @@ def chat_room(request, room_id):
                 delivered = getattr(message, 'delivered', True)
                 read = getattr(message, 'read', True)
 
+                # UPDATED: Show "Support Team" for admin messages if this is a support ticket
+                sender_name = message.sender.username
+                if is_support_ticket and not request.user.is_staff and message.sender.is_staff:
+                    sender_name = "Support Team"
+
                 messages_data.append({
                     'id': str(message.id),
                     'message': message.message,
                     'timestamp': message.timestamp.isoformat(),
                     'sender_id': message.sender.id,
-                    'sender_name': message.sender.username,
+                    'sender_name': sender_name,  # UPDATED
                     'delivered': delivered,
                     'read': read,
                 })
@@ -201,9 +223,17 @@ def chat_room(request, room_id):
                 'error': str(e)
             })
 
+    # UPDATED: Pass display name for template
+    display_name = other_user.username if other_user else "User"
+    if is_support_ticket and not request.user.is_staff and other_user and other_user.is_staff:
+        display_name = "Support Team"
+
     return render(request, 'chat/chat_room.html', {
         'chat_room': chat_room,
-        'other_user': other_user,  # This is the key addition
+        'other_user': other_user,
+        'display_name': display_name,  # ADD THIS
+        'is_support_ticket': is_support_ticket,  # ADD THIS
+        'support_ticket': support_ticket,  # ADD THIS
         'messages': [],
     })
 

@@ -4,8 +4,7 @@ from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
 from .models import ChatRoom, ChatMessage, UserActivity
 from django.utils import timezone
-from django.db import models  # Add this import if it's missing
-
+from django.db import models
 
 User = get_user_model()
 
@@ -114,43 +113,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
                             'read': False
                         }
                     )
-            # ... rest of your existing code
-
-            # In your chat/consumers.py, update the message_read handler:
 
             elif message_type == 'message_read':
-
                 # Mark message as read
-
                 message_id = data.get('message_id')
 
                 if message_id:
                     await self.mark_message_read(message_id)
 
                     # Send notification update to the user who read the message
-
                     await self.send_notification_update(self.user.id)
 
                     # Notify sender that message was read
-
                     await self.channel_layer.group_send(
-
                         self.room_group_name,
-
                         {
-
                             'type': 'message_read_update',
-
                             'message_id': message_id,
-
                             'read_by_user_id': self.user.id,
-
                             'read_by_username': self.user.username,
-
                             'read_at': timezone.now().isoformat()
-
                         }
-
                     )
 
             elif message_type == 'typing_start':
@@ -182,11 +165,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     # Handle broadcasted messages
     async def broadcast_message(self, event):
+        # Get the display name (Support Team or real name)
+        display_name = await self.get_display_name(event['sender_id'], event['sender_name'])
+
         message_data = {
             'type': 'new_message',
             'message': event['message'],
             'sender_id': event['sender_id'],
-            'sender_name': event['sender_name'],
+            'sender_name': display_name,
             'timestamp': event['timestamp'],
             'message_id': event['message_id'],
             'delivered': event['delivered'],
@@ -199,18 +185,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
             message_data['file'] = event['file']
 
         await self.send(text_data=json.dumps(message_data))
-        # Remove only these lines:
-        # if event['sender_id'] != self.user.id:
-        #     print(f"DEBUG: Sending notification update to user {self.user.id}")
-        #     await self.send_notification_update(self.user.id)
 
     async def chat_message(self, event):
         """Handle messages sent from the view (file uploads via AJAX)"""
+        # Get the display name
+        display_name = await self.get_display_name(event['sender_id'], event['sender_name'])
+
         message_data = {
             'type': 'new_message',
             'message': event.get('message', ''),
             'sender_id': event['sender_id'],
-            'sender_name': event['sender_name'],
+            'sender_name': display_name,
             'timestamp': event['timestamp'],
             'message_id': event['message_id'],
             'delivered': event.get('delivered', False),
@@ -284,7 +269,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             message = ChatMessage.objects.get(id=message_id)
             message.read = True
-            message.read_at = timezone.now()  # Add this line
+            message.read_at = timezone.now()
             message.save()
             return True
         except ChatMessage.DoesNotExist:
@@ -319,18 +304,44 @@ class ChatConsumer(AsyncWebsocketConsumer):
             print(f"Error updating user activity: {e}")
 
     @database_sync_to_async
+    def get_display_name(self, sender_id, sender_username):
+        """Get display name - show 'Support Team' for admin in support tickets"""
+        try:
+            room = ChatRoom.objects.get(id=self.room_id)
+            sender = User.objects.get(id=sender_id)
+
+            # Check if this is a support ticket
+            is_support = hasattr(room, 'support_ticket')
+
+            # If support ticket and sender is staff and viewer is NOT staff
+            if is_support and sender.is_staff and not self.user.is_staff:
+                return "Support Team"
+
+            return sender_username
+        except:
+            return sender_username
+
+    @database_sync_to_async
     def get_existing_messages(self):
         try:
             room = ChatRoom.objects.get(id=self.room_id)
             messages = room.messages.all().order_by('timestamp')
 
+            # Check if this is a support ticket
+            is_support = hasattr(room, 'support_ticket')
+
             message_list = []
             for msg in messages:
+                # Determine display name
+                sender_name = msg.sender.username
+                if is_support and msg.sender.is_staff and not self.user.is_staff:
+                    sender_name = "Support Team"
+
                 message_data = {
                     'id': str(msg.id),
                     'message': msg.message,
                     'sender_id': msg.sender.id,
-                    'sender_name': msg.sender.username,
+                    'sender_name': sender_name,
                     'timestamp': msg.timestamp.isoformat(),
                     'delivered': getattr(msg, 'delivered', True),
                     'read': getattr(msg, 'read', False)
@@ -420,7 +431,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }))
 
         print(f"Sent {len(messages)} messages and user status to {self.user}")
-    # Add this method to your existing ChatConsumer class
+
     async def send_notification_update(self, recipient_user_id):
         """Send notification update to specific user"""
         # Get recipient's unread count
@@ -438,8 +449,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_user_unread_count(self, user_id):
         try:
-            from django.contrib.auth import get_user_model
-            User = get_user_model()
             user = User.objects.get(id=user_id)
 
             # Include ALL chat types - traditional AND admin chats
@@ -481,7 +490,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return None
 
 
-# ADD THIS NEW CLASS TO YOUR CONSUMERS.PY FILE:
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         if self.scope["user"].is_authenticated:

@@ -186,3 +186,62 @@ class UserActivity(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {'Online' if self.is_online else 'Offline'}"
+
+
+class SupportTicket(models.Model):
+    """Support tickets for user-admin communication"""
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('in_progress', 'In Progress'),
+        ('resolved', 'Resolved'),
+        ('closed', 'Closed'),
+    ]
+
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('normal', 'Normal'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    ]
+
+    CATEGORY_CHOICES = [
+        ('technical', 'Technical Issue'),
+        ('payment', 'Payment/Billing'),
+        ('account', 'Account Problem'),
+        ('job', 'Job Posting'),
+        ('funding', 'Funding Question'),
+        ('other', 'Other'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='support_tickets')
+    chat_room = models.OneToOneField(ChatRoom, on_delete=models.CASCADE, related_name='support_ticket', null=True)
+
+    subject = models.CharField(max_length=200)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='normal')
+
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_support_tickets'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Ticket #{self.id} - {self.subject}"
+
+    def get_message_count(self):
+        """Get total number of messages in this ticket"""
+        if self.chat_room:
+            return self.chat_room.messages.count()
+        return 0

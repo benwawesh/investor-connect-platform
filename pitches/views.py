@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import IdeaPitch, PitchCategory, PitchInterest, PitchFile, InvestorPost
 from .forms import PitchForm, InvestorPostForm
+from django.http import FileResponse, Http404
 
 
 @login_required
@@ -328,3 +329,32 @@ def pitch_guidelines(request):
         'title': 'Pitch Guidelines'
     }
     return render(request, 'pitches/pitch_guidelines.html', context)
+
+
+@login_required
+def download_file(request, file_id):
+    """Allow authorized users to download pitch files"""
+    pitch_file = get_object_or_404(PitchFile, id=file_id)
+    pitch = pitch_file.pitch
+
+    # Check permissions
+    user_can_download = (
+            request.user == pitch.user or  # Pitch owner
+            request.user.is_staff or  # Admin
+            (request.user.user_type == 'investor' and
+             PitchInterest.objects.filter(pitch=pitch, investor=request.user).exists())  # Interested investor
+    )
+
+    if not user_can_download:
+        messages.error(request, "You don't have permission to download this file.")
+        return redirect('pitches:pitch_detail', pitch_id=pitch.id)
+
+    try:
+        # Open and return the file
+        return FileResponse(
+            pitch_file.file.open('rb'),
+            as_attachment=True,
+            filename=pitch_file.original_filename
+        )
+    except FileNotFoundError:
+        raise Http404("File not found")

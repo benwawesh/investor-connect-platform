@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST, require_http_methods
+from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Q, Count, Avg
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
@@ -35,6 +36,8 @@ def admin_required(view_func):
 @admin_required
 def admin_dashboard(request):
     """Enhanced admin dashboard with comprehensive job management integration"""
+    from accounts.models import UserProfileExtension
+
     # Get statistics
     pending_pitches = IdeaPitch.objects.filter(status='pending').count()
     pending_users = CustomUser.objects.filter(
@@ -45,7 +48,7 @@ def admin_dashboard(request):
     total_users = CustomUser.objects.count()
     total_categories = PitchCategory.objects.count()
 
-    # ADD MISSING VARIABLES:
+    # User type statistics
     total_investors = CustomUser.objects.filter(user_type='investor').count()
     total_entrepreneurs = CustomUser.objects.filter(user_type='regular').count()
 
@@ -56,12 +59,23 @@ def admin_dashboard(request):
     pending_applications = JobApplication.objects.filter(status='pending').count()
     job_seekers = CustomUser.objects.filter(user_type='job_seeker').count()
 
+    # CV Statistics
+    users_with_profiles = CustomUser.objects.exclude(userprofileextension__isnull=True)
+    total_cvs = users_with_profiles.exclude(userprofileextension__resume='').count()
+    job_seeker_cvs = users_with_profiles.filter(
+        user_type='job_seeker'
+    ).exclude(userprofileextension__resume='').count()
+    entrepreneur_cvs = users_with_profiles.filter(
+        user_type='regular'
+    ).exclude(userprofileextension__resume='').count()
+    no_cv_count = users_with_profiles.filter(userprofileextension__resume='').count()
+
     # Recent activity
     recent_pitches = IdeaPitch.objects.filter(status='pending').order_by('-submitted_at')[:5]
     recent_payments = SubscriptionPayment.objects.filter(status='completed').order_by('-payment_date')[:5]
     recent_users = CustomUser.objects.filter(user_type='regular').order_by('-created_at')[:5]
 
-    # FIXED: Enhanced recent job activity
+    # Enhanced recent job activity
     recent_jobs = JobPosting.objects.filter(is_active=True).order_by('-created_at')[:5]
     recent_applications = JobApplication.objects.select_related('applicant', 'job_posting').order_by('-applied_at')[:5]
 
@@ -74,7 +88,7 @@ def admin_dashboard(request):
         'recent_payments': recent_payments,
         'recent_users': recent_users,
 
-        # MISSING CONTEXT VARIABLES:
+        # User type statistics
         'total_investors': total_investors,
         'total_entrepreneurs': total_entrepreneurs,
 
@@ -86,6 +100,12 @@ def admin_dashboard(request):
         'job_seekers': job_seekers,
         'recent_jobs': recent_jobs,
         'recent_applications': recent_applications,
+
+        # CV Statistics
+        'total_cvs': total_cvs,
+        'job_seeker_cvs': job_seeker_cvs,
+        'entrepreneur_cvs': entrepreneur_cvs,
+        'no_cv_count': no_cv_count,
     }
     return render(request, 'admin_panel/dashboard.html', context)
 
@@ -1301,3 +1321,244 @@ def financial_analysis(request):
     }
 
     return render(request, 'admin_panel/financial_analysis.html', context)
+
+
+# ADD THESE FOUR VIEW FUNCTIONS TO YOUR admin_panel/views.py
+# Place them anywhere after your existing views (I recommend after job_seeker_detail)
+
+@admin_required
+def admin_cv_management(request):
+    """
+    Comprehensive CV management dashboard for admins
+    List all CVs with search, filter, and statistics
+    """
+    from accounts.models import UserProfileExtension
+
+    # Get all users with profiles
+    users_with_profiles = CustomUser.objects.select_related(
+        'userprofileextension'
+    ).exclude(
+        userprofileextension__isnull=True
+    )
+
+    # Filter parameters
+    user_type_filter = request.GET.get('user_type', '')
+    has_cv_filter = request.GET.get('has_cv', '')
+    search_query = request.GET.get('search', '')
+
+    # Apply user type filter
+    if user_type_filter:
+        users_with_profiles = users_with_profiles.filter(user_type=user_type_filter)
+
+    # Apply CV existence filter
+    if has_cv_filter == 'yes':
+        users_with_profiles = users_with_profiles.exclude(userprofileextension__resume='')
+    elif has_cv_filter == 'no':
+        users_with_profiles = users_with_profiles.filter(userprofileextension__resume='')
+
+    # Apply search filter
+    if search_query:
+        users_with_profiles = users_with_profiles.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(userprofileextension__first_name__icontains=search_query) |
+            Q(userprofileextension__last_name__icontains=search_query) |
+            Q(userprofileextension__bio__icontains=search_query)
+        )
+
+    # Order by most recent CV uploads (those with CVs first)
+    users_with_profiles = users_with_profiles.order_by('-userprofileextension__updated_at')
+
+    # Calculate statistics
+    total_users_with_profiles = users_with_profiles.count()
+    total_cvs = users_with_profiles.exclude(userprofileextension__resume='').count()
+    job_seeker_cvs = users_with_profiles.filter(
+        user_type='job_seeker'
+    ).exclude(userprofileextension__resume='').count()
+    entrepreneur_cvs = users_with_profiles.filter(
+        user_type='regular'
+    ).exclude(userprofileextension__resume='').count()
+
+    # Pagination
+    paginator = Paginator(users_with_profiles, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Add CV status to each user
+    for user in page_obj:
+        profile = user.userprofileextension
+        user.has_cv = bool(profile.resume)
+        if user.has_cv:
+            user.cv_filename = profile.resume.name.split('/')[-1] if profile.resume else ''
+
+    context = {
+        'page_obj': page_obj,
+        'total_users': total_users_with_profiles,
+        'total_cvs': total_cvs,
+        'job_seeker_cvs': job_seeker_cvs,
+        'entrepreneur_cvs': entrepreneur_cvs,
+        'user_types': CustomUser.USER_TYPE_CHOICES,
+        'selected_user_type': user_type_filter,
+        'selected_has_cv': has_cv_filter,
+        'search_query': search_query,
+    }
+
+    return render(request, 'admin_panel/cv_management.html', context)
+
+
+@admin_required
+def admin_view_user_cv(request, user_id):
+    """
+    View detailed CV information for a specific user
+    Includes user profile, CV download, and related data
+    """
+    from accounts.models import UserProfileExtension
+
+    user = get_object_or_404(CustomUser, id=user_id)
+    profile = get_object_or_404(UserProfileExtension, user=user)
+
+    # Get user's job applications if they exist
+    applications = None
+    if hasattr(user, 'job_applications'):
+        applications = user.job_applications.select_related('job_posting').order_by('-applied_at')[:10]
+
+    # Get saved jobs count
+    saved_jobs_count = 0
+    if hasattr(user, 'saved_jobs'):
+        saved_jobs_count = user.saved_jobs.count()
+
+    # Get job alerts count
+    job_alerts_count = 0
+    if hasattr(user, 'job_alerts'):
+        job_alerts_count = user.job_alerts.filter(is_active=True).count()
+
+    context = {
+        'user': user,
+        'profile': profile,
+        'has_cv': bool(profile.resume),
+        'cv_filename': profile.resume.name.split('/')[-1] if profile.resume else '',
+        'applications': applications,
+        'applications_count': applications.count() if applications else 0,
+        'saved_jobs_count': saved_jobs_count,
+        'job_alerts_count': job_alerts_count,
+    }
+
+    return render(request, 'admin_panel/admin_view_cv.html', context)
+
+
+@admin_required
+def export_cvs(request):
+    """
+    Export CV data to CSV with same filters as main view
+    """
+    from accounts.models import UserProfileExtension
+
+    # Get filter parameters
+    user_type_filter = request.GET.get('user_type', '')
+    has_cv_filter = request.GET.get('has_cv', '')
+    search_query = request.GET.get('search', '')
+
+    # Apply same filtering logic
+    users = CustomUser.objects.select_related('userprofileextension').exclude(
+        userprofileextension__isnull=True
+    )
+
+    if user_type_filter:
+        users = users.filter(user_type=user_type_filter)
+
+    if has_cv_filter == 'yes':
+        users = users.exclude(userprofileextension__resume='')
+    elif has_cv_filter == 'no':
+        users = users.filter(userprofileextension__resume='')
+
+    if search_query:
+        users = users.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(userprofileextension__first_name__icontains=search_query) |
+            Q(userprofileextension__last_name__icontains=search_query) |
+            Q(userprofileextension__bio__icontains=search_query)
+        )
+
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="cv_data_{timezone.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'User ID', 'Username', 'Email', 'User Type', 'First Name', 'Last Name',
+        'Phone', 'Has CV', 'CV Filename', 'Bio', 'Skills', 'Experience',
+        'Profile Completion', 'Verified', 'Created At'
+    ])
+
+    for user in users:
+        profile = user.userprofileextension
+        writer.writerow([
+            str(user.id),
+            user.username,
+            user.email,
+            user.get_user_type_display(),
+            profile.first_name or '',
+            profile.last_name or '',
+            profile.phone_number or '',
+            'Yes' if profile.resume else 'No',
+            profile.resume.name.split('/')[-1] if profile.resume else '',
+            (profile.bio or '')[:200],
+            profile.skills or '',
+            profile.experience or '',
+            f"{profile.profile_completion_percentage}%",
+            'Yes' if user.is_verified else 'No',
+            user.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        ])
+
+    return response
+
+
+@admin_required
+@require_http_methods(["DELETE"])
+def admin_delete_cv(request, user_id):
+    """
+    Admin function to delete a user's CV
+    """
+    from accounts.models import UserProfileExtension
+
+    try:
+        user = get_object_or_404(CustomUser, id=user_id)
+        profile = get_object_or_404(UserProfileExtension, user=user)
+
+        if not profile.resume:
+            return JsonResponse({
+                'success': False,
+                'message': 'User has no CV to delete'
+            }, status=400)
+
+        # Delete the CV file
+        cv_filename = profile.resume.name.split('/')[-1]
+        profile.resume.delete()
+        profile.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': f'CV "{cv_filename}" deleted successfully for {user.username}'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
+from chat.models import SupportTicket
+
+
+@staff_member_required
+def support_dashboard(request):
+    open_tickets = SupportTicket.objects.filter(status='open').order_by('-created_at')
+    in_progress = SupportTicket.objects.filter(status='in_progress').order_by('-updated_at')
+
+    context = {
+        'open_tickets': open_tickets,
+        'in_progress_tickets': in_progress,
+        'total_open': open_tickets.count(),
+    }
+    return render(request, 'admin_panel/support_dashboard.html', context)

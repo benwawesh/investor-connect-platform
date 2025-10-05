@@ -26,20 +26,30 @@
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
                             <!-- User Info -->
-                            <div class="flex items-center space-x-3">
-                                <div class="flex-shrink-0">
-                                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                                        <span class="text-white font-medium">
+                          <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center
+                                    {% if chat.is_support_ticket and not user.is_staff %}bg-indigo-600
+                                    {% else %}bg-blue-600{% endif %}">
+                                    <span class="text-white font-medium">
+                                        {% if chat.is_support_ticket and not user.is_staff %}
+                                            <i class="fas fa-headset"></i>
+                                        {% else %}
                                             {{ chat.other_user.username|first|upper }}
-                                        </span>
-                                    </div>
+                                        {% endif %}
+                                    </span>
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center space-x-2">
-                                        <h3 class="text-lg font-medium text-gray-900 truncate">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center space-x-2">
+                                    <h3 class="text-lg font-medium text-gray-900 truncate">
+                                        {% if chat.is_support_ticket and not user.is_staff %}
+                                            Support Team
+                                        {% else %}
                                             {{ chat.other_user.username }}
-                                        </h3>
-                                        {% if chat.unread_count > 0 %}
+                                        {% endif %}
+                                    </h3>
+                                                                {% if chat.unread_count > 0 %}
                                             <span class="bg-red-500 text-white text-xs rounded-full px-2 py-1">
                                                 {{ chat.unread_count }}
                                             </span>

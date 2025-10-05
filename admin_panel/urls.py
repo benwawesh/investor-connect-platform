@@ -6,6 +6,7 @@ app_name = 'admin_panel'
 urlpatterns = [
     # Main admin dashboard
     path('', views.admin_dashboard, name='admin_dashboard'),
+    path('support/', views.support_dashboard, name='support_dashboard'),
 
     # Category management
     path('categories/', views.manage_categories, name='manage_categories'),
@@ -14,14 +15,19 @@ urlpatterns = [
     # User management
     path('users/', views.user_management, name='user_management'),
     path('users/register-investor/', views.register_investor, name='register_investor'),
-    path('users/<int:user_id>/', views.user_detail, name='user_detail'),  # Add this line
+    path('users/<int:user_id>/', views.user_detail, name='user_detail'),
     path('users/<int:user_id>/verify/', views.verify_user, name='verify_user'),
-    path('users/<int:user_id>/suspend/', views.suspend_user, name='suspend_user'),  # Add this line
-    path('users/<int:user_id>/unsuspend/', views.unsuspend_user, name='unsuspend_user'),  # Add this line
-    path('users/<int:user_id>/delete/', views.delete_user, name='delete_user'),  # Add this line
+    path('users/<int:user_id>/suspend/', views.suspend_user, name='suspend_user'),
+    path('users/<int:user_id>/unsuspend/', views.unsuspend_user, name='unsuspend_user'),
+    path('users/<int:user_id>/delete/', views.delete_user, name='delete_user'),
     path('users/bulk-action/', views.bulk_action, name='bulk_action'),
 
-    # ... rest of your existing URLs remain the same ...
+    # CV Management (NEW)
+    path('cv-management/', views.admin_cv_management, name='cv_management'),
+    path('cv-management/export/', views.export_cvs, name='export_cvs'),
+    path('cv-management/<int:user_id>/', views.admin_view_user_cv, name='view_user_cv'),
+    path('cv-management/<int:user_id>/delete/', views.admin_delete_cv, name='delete_user_cv'),
+
     # Pitch management
     path('pitches/', views.pitch_management, name='pitch_management'),
     path('pitches/<uuid:pitch_id>/review/', views.review_pitch, name='review_pitch'),
@@ -58,7 +64,7 @@ urlpatterns = [
     path('job-seekers/', views.job_seeker_management, name='job_seeker_management'),
     path('job-seekers/<int:user_id>/', views.job_seeker_detail, name='job_seeker_detail'),
 
-    # Platform Settings URLs (add these)
+    # Platform Settings
     path('settings/', views.platform_settings, name='platform_settings'),
     path('settings/history/', views.view_settings_history, name='settings_history'),
 ]

@@ -1,0 +1,200 @@
+<!-- templates/500.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}500 - Server Error | BazuuConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #f59e0b;
+        --primary-light: #fbbf24;
+        --primary-dark: #d97706;
+        --dark: #0f172a;
+        --dark-light: #1e293b;
+        --white: #ffffff;
+    }
+
+    main {
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .error-bg {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .error-bg::before {
+        content: '';
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 70%);
+        border-radius: 50%;
+        top: -300px;
+        right: -300px;
+        animation: float 20s ease-in-out infinite;
+    }
+
+    .error-bg::after {
+        content: '';
+        position: absolute;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        bottom: -250px;
+        left: -250px;
+        animation: float 15s ease-in-out infinite reverse;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        33% { transform: translate(50px, -50px) rotate(120deg); }
+        66% { transform: translate(-50px, 50px) rotate(240deg); }
+    }
+
+    .error-container {
+        text-align: center;
+        padding: 80px 20px;
+        max-width: 700px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+    }
+
+    .error-code {
+        font-size: clamp(8rem, 20vw, 15rem);
+        font-weight: 900;
+        line-height: 1;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 20px;
+        animation: glitch 3s infinite;
+    }
+
+    @keyframes glitch {
+        0%, 100% { transform: translate(0); }
+        20% { transform: translate(-2px, 2px); }
+        40% { transform: translate(2px, -2px); }
+        60% { transform: translate(-2px, -2px); }
+        80% { transform: translate(2px, 2px); }
+    }
+
+    .error-icon {
+        font-size: 6rem;
+        color: #ef4444;
+        margin-bottom: 30px;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .error-title {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .error-message {
+        font-size: 1.25rem;
+        color: #94a3b8;
+        margin-bottom: 40px;
+        line-height: 1.6;
+    }
+
+    .error-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 16px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: var(--white);
+        box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 40px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--white);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    @media (max-width: 768px) {
+        .error-code { font-size: 8rem; }
+        .error-icon { font-size: 4rem; }
+        .error-actions { flex-direction: column; width: 100%; }
+        .btn { width: 100%; justify-content: center; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="error-bg">
+    <div class="error-container">
+        <div class="error-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+
+        <div class="error-code">500</div>
+
+        <h1 class="error-title">Internal Server Error</h1>
+
+        <p class="error-message">
+            Something went wrong on our end. Our team has been notified and we're working to fix it.
+            Please try again in a few moments.
+        </p>
+
+        <div class="error-actions">
+           <a href="{% url 'accounts:home' %}" class="btn btn-primary">
+                <i class="fas fa-home"></i> Go to Homepage
+            </a>
+            <a href="javascript:location.reload()" class="btn btn-secondary">
+                <i class="fas fa-sync"></i> Reload Page
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

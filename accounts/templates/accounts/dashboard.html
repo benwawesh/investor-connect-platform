@@ -274,7 +274,7 @@
         <h2 class="text-xl font-semibold text-gray-900 mb-4">
             <i class="fas fa-briefcase text-green-600 mr-2"></i>Job Search Dashboard
         </h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
             <!-- Browse Jobs -->
             <a href="{% url 'jobs:job_list' %}" class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg text-center hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg">
                 <i class="fas fa-search fa-2x mb-3"></i>
@@ -301,6 +301,31 @@
                 <i class="fas fa-bell fa-2x mb-3"></i>
                 <div class="font-medium">Job Alerts</div>
                 <div class="text-sm opacity-90">{{ job_alerts|default:0 }} active</div>
+            </a>
+
+            <!-- NEW: Upload/Manage CV Button -->
+            <a href="{% url 'accounts:manage_cv' %}" class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-lg text-center hover:from-orange-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-lg relative">
+                <i class="fas fa-file-upload fa-2x mb-3"></i>
+                <div class="font-medium">
+                    {% if user.userprofileextension.resume %}
+                        My CV
+                    {% else %}
+                        Upload CV
+                    {% endif %}
+                </div>
+                <div class="text-sm opacity-90">
+                    {% if user.userprofileextension.resume %}
+                        Update resume
+                    {% else %}
+                        Add resume
+                    {% endif %}
+                </div>
+                <!-- Show check mark if CV is uploaded -->
+                {% if user.userprofileextension.resume %}
+                <span class="absolute -top-2 -right-2 bg-green-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+                    <i class="fas fa-check"></i>
+                </span>
+                {% endif %}
             </a>
         </div>
 
@@ -674,155 +699,6 @@
         <div class="bg-white rounded-xl shadow-lg p-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-gray-900">
-                    {% if user.is_staff %}
-                    <a href="{% url 'admin_panel:admin_dashboard' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
-                        <i class="fas fa-cogs mr-2"></i>
-                        Admin Panel
-                    </a>
-                    <a href="{% url 'admin_panel:job_management' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
-                        <i class="fas fa-briefcase mr-2"></i>
-                        Manage Jobs
-                    </a>
-                    <a href="{% url 'accounts:notification_settings' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
-                        <i class="fas fa-bell mr-2"></i>
-                        Notification Settings
-                    </a>
-                    {% elif user.is_job_seeker %}
-                    <a href="{% url 'jobs:job_search' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
-                        <i class="fas fa-search mr-2"></i>
-                        Advanced Job Search
-                    </a>
-                    <a href="{% url 'jobs:create_job_alert' %}" class="flex items-center text-sm text-green-600 hover:text-green-800">
-                        <i class="fas fa-bell mr-2"></i>
-                        Create Job Alert
-                    </a>
-                    <a href="{% url 'accounts:profile_edit' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
-                        <i class="fas fa-edit mr-2"></i>
-                        Edit Profile
-                    </a>
-                    <a href="{% url 'accounts:contact_admin' %}" class="flex items-center text-sm text-green-600 hover:text-green-800">
-                        <i class="fas fa-headset mr-2"></i>
-                        Contact Support
-                    </a>
-                    {% else %}
-                    <a href="{% url 'accounts:profile_edit' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
-                        <i class="fas fa-edit mr-2"></i>
-                        Edit Profile
-                    </a>
-                    <a href="{% url 'accounts:change_password' %}" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
-                        <i class="fas fa-lock mr-2"></i>
-                        Change Password
-                    </a>
-                    {% if user.can_post_jobs %}
-                    <a href="{% url 'jobs:post_job' %}" class="flex items-center text-sm text-green-600 hover:text-green-800">
-                        <i class="fas fa-plus mr-2"></i>
-                        Post a Job
-                    </a>
-                    {% endif %}
-                    <a href="{% url 'accounts:contact_admin' %}" class="flex items-center text-sm text-green-600 hover:text-green-800">
-                        <i class="fas fa-headset mr-2"></i>
-                        Contact Support
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function switchMode(mode) {
-    // Hide all dashboards
-    const dashboards = ['pitchDashboard', 'jobDashboard', 'employerDashboard'];
-    dashboards.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.classList.add('hidden');
-    });
-
-    // Remove active state from all tabs
-    const tabs = ['pitchTab', 'jobTab', 'employerTab'];
-    tabs.forEach(id => {
-        const tab = document.getElementById(id);
-        if (tab) {
-            tab.classList.remove('bg-blue-600', 'text-white');
-            tab.classList.add('text-gray-700', 'hover:text-gray-900', 'hover:bg-gray-200');
-        }
-    });
-
-    // Show selected dashboard and activate tab
-    const selectedDashboard = document.getElementById(mode + 'Dashboard');
-    const selectedTab = document.getElementById(mode + 'Tab');
-
-    if (selectedDashboard) selectedDashboard.classList.remove('hidden');
-    if (selectedTab) {
-        selectedTab.classList.remove('text-gray-700', 'hover:text-gray-900', 'hover:bg-gray-200');
-        selectedTab.classList.add('bg-blue-600', 'text-white');
-    }
-
-    // Store user preference
-    localStorage.setItem('dashboardMode', mode);
-}
-
-// Initialize dashboard mode on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const savedMode = localStorage.getItem('dashboardMode');
-
-    // Smart default based on user registration type
-    let defaultMode;
-    {% if user.user_type == 'job_seeker' %}
-        // Registered as job seeker → default to Job Mode
-        defaultMode = 'job';
-    {% else %}
-        {% if user.user_type == 'regular' %}
-            // Registered as entrepreneur → default to Pitch Mode
-            defaultMode = 'pitch';
-        {% else %}
-            // Fallback for other user types
-            defaultMode = 'pitch';
-        {% endif %}
-    {% endif %}
-
-    const modeToLoad = savedMode || defaultMode;
-
-    // Only switch if the mode exists (user has access to it)
-    const targetDashboard = document.getElementById(modeToLoad + 'Dashboard');
-    if (targetDashboard) {
-        switchMode(modeToLoad);
-    }
-});
-// Update dashboard message badge when notifications arrive
-document.addEventListener('DOMContentLoaded', function() {
-    const dashboardBadge = document.getElementById('dashboardMessageBadge');
-
-    // Function to update dashboard badge specifically
-    function updateDashboardBadge(count) {
-        if (dashboardBadge) {
-            if (count > 0) {
-                dashboardBadge.textContent = count > 9 ? '9+' : count.toString();
-                dashboardBadge.style.display = 'flex';
-            } else {
-                dashboardBadge.style.display = 'none';
-            }
-        }
-    }
-
-    // Listen for notification updates from base template
-    if (typeof updateNotificationBadges !== 'undefined') {
-        // Store original function
-        const originalUpdateFunction = updateNotificationBadges;
-        // Override to also update dashboard badge
-        updateNotificationBadges = function(count) {
-            originalUpdateFunction(count);
-            updateDashboardBadge(count);
-        };
-    }
-
-    // Set initial badge state
-    const initialCount = {{ unread_message_count|default:0 }};
-    updateDashboardBadge(initialCount);
-});
-</script>
-
                       Recent Platform Activity
 
     {% if user.is_job_seeker %}
@@ -1169,6 +1045,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 </div>
+</div>
 
 <script>
 function switchMode(mode) {
@@ -1207,13 +1084,19 @@ function switchMode(mode) {
 document.addEventListener('DOMContentLoaded', function() {
     const savedMode = localStorage.getItem('dashboardMode');
 
-    // Default to appropriate mode based on user type
-    {% if user.is_job_seeker %}
-    const defaultMode = 'job';
-    {% elif not user.is_job_seeker %}
-    const defaultMode = 'pitch';
+    // Smart default based on user registration type
+    let defaultMode;
+    {% if user.user_type == 'job_seeker' %}
+        // Registered as job seeker → default to Job Mode
+        defaultMode = 'job';
     {% else %}
-    const defaultMode = 'pitch';
+        {% if user.user_type == 'regular' %}
+            // Registered as entrepreneur → default to Pitch Mode
+            defaultMode = 'pitch';
+        {% else %}
+            // Fallback for other user types
+            defaultMode = 'pitch';
+        {% endif %}
     {% endif %}
 
     const modeToLoad = savedMode || defaultMode;
@@ -1224,7 +1107,6 @@ document.addEventListener('DOMContentLoaded', function() {
         switchMode(modeToLoad);
     }
 });
-
 // Update dashboard message badge when notifications arrive
 document.addEventListener('DOMContentLoaded', function() {
     const dashboardBadge = document.getElementById('dashboardMessageBadge');

@@ -1,4 +1,4 @@
-# accounts/urls.py - REMOVE THE OLD PROFILE
+# accounts/urls.py
 from django.urls import path
 from django.contrib.auth.views import LoginView
 from . import views
@@ -12,17 +12,22 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard, name='dashboard'),
 
-    # Profile Management URLs - CONSOLIDATED
+    # Profile Management URLs
     path('profile/', views.profile_view, name='profile_view'),
-    path('profile/<str:username>/', views.profile_detail_view, name='profile_detail'),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
     path('profile/settings/', views.profile_settings_menu, name='profile_settings_menu'),
+    path('profile/delete-picture/', views.delete_profile_picture, name='delete_profile_picture'),
+
+    # NEW: Separate CV Management Page
+    path('cv/manage/', views.manage_cv, name='manage_cv'),
+
     path('settings/password/', views.change_password, name='change_password'),
     path('settings/notifications/', views.notification_settings, name='notification_settings'),
-    path('profile/delete-picture/', views.delete_profile_picture, name='delete_profile_picture'),
     path('contact-admin/', views.contact_admin, name='contact_admin'),
 
+    # GENERIC PATTERN LAST
+    path('profile/<str:username>/', views.profile_detail_view, name='profile_detail'),
+
     # M-Pesa Payment Integration
-    # path('payments/callback/', views.mpesa_callback, name='mpesa_callback'),
     path('payments/status/', views.check_payment_status, name='check_payment_status'),
 ]

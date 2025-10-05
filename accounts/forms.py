@@ -102,11 +102,15 @@ class UserProfileExtensionForm(forms.ModelForm):
         fields = [
             'first_name', 'last_name', 'profile_picture', 'location',
             'job_title', 'industry', 'experience_level',
+            'resume', 'skills', 'job_level',  # ADD THESE JOB SEEKER FIELDS
+            'desired_salary_min', 'desired_salary_max',
+            'availability', 'preferred_employment_type',
+            'portfolio_url', 'linkedin_url', 'github_url',
+            'open_to_remote', 'preferred_locations',
             'investment_range', 'investment_focus',
             'business_stage', 'funding_goal',
             'profile_visibility'
         ]
-        # Removed: 'website', 'linkedin_url', 'show_email', 'show_phone'
 
         widgets = {
             'first_name': forms.TextInput(attrs={
@@ -135,6 +139,56 @@ class UserProfileExtensionForm(forms.ModelForm):
             'experience_level': forms.Select(attrs={
                 'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
             }),
+
+            # JOB SEEKER WIDGETS
+            'resume': forms.FileInput(attrs={
+                'class': 'mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100',
+                'accept': '.pdf,.doc,.docx'
+            }),
+            'skills': forms.Textarea(attrs={
+                'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'e.g., Python, Django, JavaScript, React (comma-separated)',
+                'rows': 3
+            }),
+            'job_level': forms.Select(attrs={
+                'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+            }),
+            'desired_salary_min': forms.NumberInput(attrs={
+                'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': '50000'
+            }),
+            'desired_salary_max': forms.NumberInput(attrs={
+                'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': '80000'
+            }),
+            'availability': forms.Select(attrs={
+                'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+            }),
+            'preferred_employment_type': forms.Select(attrs={
+                'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+            }),
+            'portfolio_url': forms.URLInput(attrs={
+                'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'https://yourportfolio.com'
+            }),
+            'linkedin_url': forms.URLInput(attrs={
+                'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'https://linkedin.com/in/yourprofile'
+            }),
+            'github_url': forms.URLInput(attrs={
+                'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'https://github.com/yourusername'
+            }),
+            'open_to_remote': forms.CheckboxInput(attrs={
+                'class': 'rounded text-blue-600 focus:ring-blue-500'
+            }),
+            'preferred_locations': forms.Textarea(attrs={
+                'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'Enter preferred work locations (one per line)',
+                'rows': 3
+            }),
+
+            # INVESTOR/ENTREPRENEUR WIDGETS (existing)
             'investment_range': forms.Select(attrs={
                 'class': 'mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
             }),
@@ -165,14 +219,23 @@ class UserProfileExtensionForm(forms.ModelForm):
                 for field in fields_to_remove:
                     self.fields.pop(field, None)
             else:
-                # Regular user logic
-                # Hide investor-specific fields for entrepreneurs
+                # Remove job seeker fields for non-job seekers
+                if not user.is_job_seeker:
+                    job_seeker_fields = [
+                        'resume', 'skills', 'job_level', 'desired_salary_min',
+                        'desired_salary_max', 'availability', 'preferred_employment_type',
+                        'portfolio_url', 'github_url', 'open_to_remote', 'preferred_locations'
+                    ]
+                    for field in job_seeker_fields:
+                        self.fields.pop(field, None)
+
+                # Hide investor-specific fields for entrepreneurs/job seekers
                 if not user.is_investor:
                     self.fields.pop('investment_range', None)
                     self.fields.pop('investment_focus', None)
 
-                # Hide entrepreneur-specific fields for investors
-                if user.is_investor:
+                # Hide entrepreneur-specific fields for investors/job seekers
+                if user.is_investor or user.user_type == 'job_seeker':
                     self.fields.pop('business_stage', None)
                     self.fields.pop('funding_goal', None)
 

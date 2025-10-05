@@ -3,7 +3,7 @@
 {% block title %}Investor Insights - InvestorConnect{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto mt-8 px-4">
+<div class="max-w-4xl mx-auto mt-8 px-4">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
         <div>
@@ -11,7 +11,7 @@
             <p class="text-gray-600 mt-2">Learn from experienced investors and industry leaders</p>
         </div>
 
-        {% if user.user_type == 'investor' %}
+        {% if user.user_type == 'investor' or user.is_staff %}
         <a href="{% url 'pitches:create_investor_post' %}"
            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
             + Create Post
@@ -35,53 +35,74 @@
         </div>
     </div>
 
-    <!-- Posts Grid -->
+    <!-- Posts Feed -->
     {% if posts %}
         <div class="space-y-6">
             {% for post in posts %}
             <article class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+
+                <!-- Featured Image - LARGER and MORE VISIBLE -->
                 {% if post.featured_image %}
                 <div class="post-image-container">
-                    <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="post-image">
+                    <a href="{% url 'pitches:investor_post_detail' post.id %}">
+                        <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="post-image">
+                    </a>
                 </div>
                 {% endif %}
 
                 <div class="p-6">
-                    <!-- Post Header with Clickable Profile -->
+                    <!-- Post Header -->
                     <div class="flex items-center mb-4">
-                        <!-- Clickable Profile Picture -->
-                        <a href="{% url 'accounts:profile_detail' username=post.investor.username %}" class="flex-shrink-0 investor-profile-link">
-                            {% if post.investor.userprofileextension.profile_picture %}
-                                <img src="{{ post.investor.userprofileextension.profile_picture.url }}"
-                                     alt="{{ post.investor.username }}"
-                                     class="w-12 h-12 rounded-full object-cover border-2 border-gray-200 hover:border-green-400 transition-colors profile-avatar">
-                            {% else %}
-                                <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center border-2 border-gray-200 hover:border-green-400 transition-colors profile-avatar">
-                                    <span class="text-white font-medium text-lg">{{ post.investor.username|first|upper }}</span>
+                        <!-- Profile Picture - Not clickable for admin posts -->
+                        {% if post.investor.is_staff %}
+                            <!-- Admin/Support Team - Not Clickable -->
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center border-2 border-gray-200">
+                                    <i class="fas fa-headset text-white"></i>
                                 </div>
-                            {% endif %}
-                        </a>
+                            </div>
+                        {% else %}
+                            <!-- Regular User - Clickable -->
+                            <a href="{% url 'accounts:profile_detail' username=post.investor.username %}" class="flex-shrink-0 investor-profile-link">
+                                {% if post.investor.userprofileextension.profile_picture %}
+                                    <img src="{{ post.investor.userprofileextension.profile_picture.url }}"
+                                         alt="{{ post.investor.username }}"
+                                         class="w-12 h-12 rounded-full object-cover border-2 border-gray-200 hover:border-green-400 transition-colors profile-avatar">
+                                {% else %}
+                                    <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center border-2 border-gray-200 hover:border-green-400 transition-colors profile-avatar">
+                                        <span class="text-white font-medium text-lg">{{ post.investor.username|first|upper }}</span>
+                                    </div>
+                                {% endif %}
+                            </a>
+                        {% endif %}
 
                         <!-- Post Info -->
                         <div class="ml-4 flex-1">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <!-- Clickable Name -->
-                                    <a href="{% url 'accounts:profile_detail' username=post.investor.username %}"
-                                       class="font-semibold text-gray-900 hover:text-green-600 transition-colors flex items-center profile-name">
-                                        {% if post.investor.userprofileextension.get_full_name %}
-                                            {{ post.investor.userprofileextension.get_full_name }}
-                                        {% else %}
-                                            {{ post.investor.username }}
-                                        {% endif %}
-                                        <i class="fas fa-coins text-green-600 ml-2 text-sm" title="Investor"></i>
-                                    </a>
+                                    <!-- Name - Not clickable for admin -->
+                                    {% if post.investor.is_staff %}
+                                        <span class="font-semibold text-gray-900 flex items-center">
+                                            Platform Team
+                                            <i class="fas fa-shield-alt text-indigo-600 ml-2 text-sm" title="Platform Team"></i>
+                                        </span>
+                                    {% else %}
+                                        <a href="{% url 'accounts:profile_detail' username=post.investor.username %}"
+                                           class="font-semibold text-gray-900 hover:text-green-600 transition-colors flex items-center profile-name">
+                                            {% if post.investor.userprofileextension.get_full_name %}
+                                                {{ post.investor.userprofileextension.get_full_name }}
+                                            {% else %}
+                                                {{ post.investor.username }}
+                                            {% endif %}
+                                            <i class="fas fa-coins text-green-600 ml-2 text-sm" title="Investor"></i>
+                                        </a>
+                                    {% endif %}
 
                                     <!-- Post metadata -->
                                     <div class="flex items-center text-sm text-gray-500 mt-1">
                                         <span>{{ post.created_at|date:"M d, Y" }}</span>
                                         <span class="mx-2">•</span>
-                                        <span>{{ post.read_count }} reads</span>
+
                                     </div>
                                 </div>
 
@@ -112,7 +133,7 @@
                     <p class="text-gray-700 mb-4 leading-relaxed">{{ post.content|truncatewords:30 }}</p>
 
                     <!-- Post Tags -->
-                  {% if post.get_tags_list %}
+                    {% if post.get_tags_list %}
                     <div class="flex flex-wrap gap-2 mb-4">
                         {% for tag in post.get_tags_list|slice:":5" %}
                         <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
@@ -128,15 +149,17 @@
                     <!-- Post Actions -->
                     <div class="flex items-center justify-between pt-4 border-t border-gray-200">
                         <div class="flex items-center space-x-4">
-                            <!-- View Profile Button -->
+                            <!-- View Profile Button - Only for non-admin posts -->
+                            {% if not post.investor.is_staff %}
                             <a href="{% url 'accounts:profile_detail' username=post.investor.username %}"
                                class="text-sm text-gray-600 hover:text-green-600 transition-colors flex items-center">
                                 <i class="fas fa-user mr-1"></i>View Profile
                             </a>
+                            {% endif %}
 
-                            <!-- Contact Button (if not viewing own post) -->
-                            {% if request.user != post.investor %}
-                                <a href="{% url 'chat:chat_list' %}"
+                            <!-- Contact Button - Only for non-admin and not own post -->
+                            {% if request.user != post.investor and not post.investor.is_staff %}
+                                <a href="{% url 'chat:start_chat' username=post.investor.username %}"
                                    class="text-sm text-gray-600 hover:text-blue-600 transition-colors flex items-center">
                                     <i class="fas fa-comment mr-1"></i>Contact
                                 </a>
@@ -160,33 +183,12 @@
             {% endfor %}
         </div>
 
-        <!-- Pagination (if you have it) -->
-        {% if is_paginated %}
-        <div class="flex justify-center mt-8">
-            <nav class="flex items-center space-x-2">
-                {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}"
-                       class="px-3 py-2 text-sm text-gray-600 hover:text-blue-600">Previous</a>
-                {% endif %}
-
-                <span class="px-3 py-2 text-sm text-gray-700">
-                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                </span>
-
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}"
-                       class="px-3 py-2 text-sm text-gray-600 hover:text-blue-600">Next</a>
-                {% endif %}
-            </nav>
-        </div>
-        {% endif %}
-
     {% else %}
         <div class="text-center py-12">
             <i class="fas fa-newspaper text-gray-400 text-6xl mb-4"></i>
             <h3 class="text-lg font-medium text-gray-900 mb-2">No posts yet</h3>
             <p class="text-gray-600">Check back soon for insights from our investor community.</p>
-            {% if user.user_type == 'investor' %}
+            {% if user.user_type == 'investor' or user.is_staff %}
                 <a href="{% url 'pitches:create_investor_post' %}"
                    class="mt-4 inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
                     Share Your First Insight
@@ -225,28 +227,37 @@ function sharePost(title, url) {
     text-decoration: underline;
 }
 
-/* Post image styling */
+/* Post image styling - MUCH LARGER AND MORE VISIBLE */
 .post-image-container {
     width: 100%;
-    height: 200px;
+    height: 400px; /* INCREASED from 200px to 400px */
     overflow: hidden;
+    background-color: #f3f4f6;
 }
 
 .post-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
     transition: transform 0.3s ease;
 }
 
 .post-image:hover {
-    transform: scale(1.02);
+    transform: scale(1.05);
 }
 
 /* Animation for card hover */
 article:hover {
     transform: translateY(-2px);
     transition: transform 0.2s ease;
+}
+
+/* Responsive image heights */
+@media (max-width: 768px) {
+    .post-image-container {
+        height: 300px;
+    }
 }
 </style>
 {% endblock %}

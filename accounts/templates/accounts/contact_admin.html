@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Contact Support</h1>
+
+    <!-- Existing Tickets -->
+    {% if user_tickets %}
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-bold mb-4">Your Recent Tickets</h2>
+        <div class="space-y-3">
+            {% for ticket in user_tickets %}
+            <a href="{% url 'chat:chat_room' room_id=ticket.chat_room.id %}"
+               class="block p-4 border rounded hover:bg-gray-50 transition">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="font-semibold">#{{ ticket.id|slice:":8" }}</span>
+                        <span class="text-gray-600">- {{ ticket.subject }}</span>
+                    </div>
+                    <span class="px-3 py-1 rounded text-sm font-semibold
+                        {% if ticket.status == 'open' %}bg-green-100 text-green-800
+                        {% elif ticket.status == 'in_progress' %}bg-blue-100 text-blue-800
+                        {% elif ticket.status == 'resolved' %}bg-gray-100 text-gray-800
+                        {% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ ticket.get_status_display }}
+                    </span>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">
+                    {{ ticket.created_at|timesince }} ago • {{ ticket.get_message_count }} messages
+                </p>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- New Ticket Form -->
+    <div class="bg-white shadow-md rounded-lg p-8">
+        <h2 class="text-2xl font-bold mb-6">Create New Support Ticket</h2>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">Subject *</label>
+                <input type="text" name="subject" required
+                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Category</label>
+                    <select name="category" class="w-full px-4 py-2 border rounded-lg">
+                        <option value="technical">Technical Issue</option>
+                        <option value="payment">Payment/Billing</option>
+                        <option value="account">Account Problem</option>
+                        <option value="job">Job Posting</option>
+                        <option value="funding">Funding Question</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Priority</label>
+                    <select name="priority" class="w-full px-4 py-2 border rounded-lg">
+                        <option value="normal">Normal</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">Message *</label>
+                <textarea name="message" required rows="6"
+                          class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
+                          placeholder="Describe your issue in detail..."></textarea>
+            </div>
+
+            <button type="submit"
+                    class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-bold">
+                <i class="fas fa-paper-plane mr-2"></i>Submit Ticket
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
