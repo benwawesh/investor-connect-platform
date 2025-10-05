@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Saved Jobs - InvestorConnect{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">
+                    <i class="fas fa-bookmark text-purple-600 mr-3"></i>Saved Jobs
+                </h1>
+                <p class="text-gray-600 mt-2">Your bookmarked job opportunities</p>
+            </div>
+            <a href="{% url 'jobs:job_list' %}" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-search mr-2"></i>Browse More Jobs
+            </a>
+        </div>
+    </div>
+
+    <!-- Saved Jobs List -->
+    {% if page_obj %}
+        <div class="grid grid-cols-1 gap-6">
+            {% for saved in page_obj %}
+            <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="flex items-center mb-2">
+                            <h3 class="text-xl font-semibold text-gray-900">
+                                <a href="{% url 'jobs:job_detail' saved.job_posting.id %}" class="hover:text-blue-600">
+                                    {{ saved.job_posting.title }}
+                                </a>
+                            </h3>
+                            {% if saved.job_posting.is_featured %}
+                            <span class="ml-3 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded">
+                                <i class="fas fa-star mr-1"></i>Featured
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="text-gray-700 mb-3">
+                            <i class="fas fa-building mr-2 text-gray-500"></i>{{ saved.job_posting.company_name }}
+                        </div>
+
+                        <div class="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
+                            <span><i class="fas fa-map-marker-alt mr-2 text-gray-500"></i>{{ saved.job_posting.location }}</span>
+                            <span><i class="fas fa-briefcase mr-2 text-gray-500"></i>{{ saved.job_posting.get_job_type_display }}</span>
+                            {% if saved.job_posting.salary_min %}
+                            <span><i class="fas fa-money-bill-wave mr-2 text-gray-500"></i>KSh {{ saved.job_posting.salary_min|floatformat:0 }}{% if saved.job_posting.salary_max %} - {{ saved.job_posting.salary_max|floatformat:0 }}{% endif %}</span>
+                            {% endif %}
+                            <span><i class="fas fa-clock mr-2 text-gray-500"></i>Posted {{ saved.job_posting.created_at|timesince }} ago</span>
+                        </div>
+
+                        <p class="text-gray-700 mb-4">{{ saved.job_posting.description|truncatewords:30 }}</p>
+
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-bookmark mr-2 text-purple-600"></i>
+                            Saved {{ saved.saved_at|timesince }} ago
+                            {% if saved.notes %}
+                            <span class="ml-4"><i class="fas fa-sticky-note mr-2"></i>Has notes</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="ml-6 flex flex-col space-y-2">
+                        <a href="{% url 'jobs:job_detail' saved.job_posting.id %}" 
+                           class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center">
+                            <i class="fas fa-eye mr-2"></i>View Job
+                        </a>
+                        
+                        <a href="{% url 'jobs:unsave_job' saved.job_posting.id %}" 
+                           class="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors text-center"
+                           onclick="return confirm('Remove this job from your saved list?');">
+                            <i class="fas fa-trash mr-2"></i>Remove
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="mt-8 flex justify-center">
+            <nav class="inline-flex rounded-md shadow-sm">
+                {% if page_obj.has_previous %}
+                <a href="?page=1" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+                {% endif %}
+
+                <span class="px-4 py-2 border-t border-b border-gray-300 bg-gray-50 text-gray-700">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+
+    {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-lg shadow-md p-12 text-center">
+            <i class="fas fa-bookmark fa-4x text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Saved Jobs Yet</h3>
+            <p class="text-gray-600 mb-6">Start saving jobs you're interested in for quick access later</p>
+            <a href="{% url 'jobs:job_list' %}" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-search mr-2"></i>Browse Jobs
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

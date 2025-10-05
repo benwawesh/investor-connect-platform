@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Job Alerts - InvestorConnect{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">
+                    <i class="fas fa-bell text-yellow-600 mr-3"></i>Job Alerts
+                </h1>
+                <p class="text-gray-600 mt-2">Manage your job notifications and get notified when matching jobs are posted</p>
+            </div>
+            <a href="{% url 'jobs:create_job_alert' %}" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-plus mr-2"></i>Create Alert
+            </a>
+        </div>
+    </div>
+
+    <!-- Job Alerts List -->
+    {% if alerts %}
+        <div class="grid grid-cols-1 gap-6">
+            {% for alert in alerts %}
+            <div class="bg-white rounded-lg shadow-md p-6 {% if not alert.is_active %}opacity-60{% endif %}">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="flex items-center mb-3">
+                            <h3 class="text-xl font-semibold text-gray-900">{{ alert.alert_name }}</h3>
+                            {% if alert.is_active %}
+                            <span class="ml-3 bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
+                                <i class="fas fa-check-circle mr-1"></i>Active
+                            </span>
+                            {% else %}
+                            <span class="ml-3 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded">
+                                <i class="fas fa-pause-circle mr-1"></i>Paused
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Alert Criteria -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                            {% if alert.keywords %}
+                            <div class="text-sm">
+                                <span class="text-gray-500 block mb-1">Keywords:</span>
+                                <span class="text-gray-900 font-medium">{{ alert.keywords }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if alert.location %}
+                            <div class="text-sm">
+                                <span class="text-gray-500 block mb-1">Location:</span>
+                                <span class="text-gray-900 font-medium"><i class="fas fa-map-marker-alt mr-1"></i>{{ alert.location }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if alert.job_type %}
+                            <div class="text-sm">
+                                <span class="text-gray-500 block mb-1">Job Type:</span>
+                                <span class="text-gray-900 font-medium"><i class="fas fa-briefcase mr-1"></i>{{ alert.get_job_type_display }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if alert.experience_level %}
+                            <div class="text-sm">
+                                <span class="text-gray-500 block mb-1">Experience:</span>
+                                <span class="text-gray-900 font-medium">{{ alert.get_experience_level_display }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if alert.industry %}
+                            <div class="text-sm">
+                                <span class="text-gray-500 block mb-1">Industry:</span>
+                                <span class="text-gray-900 font-medium">{{ alert.industry }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if alert.min_salary %}
+                            <div class="text-sm">
+                                <span class="text-gray-500 block mb-1">Min Salary:</span>
+                                <span class="text-gray-900 font-medium">KSh {{ alert.min_salary|floatformat:0 }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if alert.remote_only %}
+                            <div class="text-sm">
+                                <span class="text-gray-500 block mb-1">Remote:</span>
+                                <span class="text-gray-900 font-medium"><i class="fas fa-home mr-1"></i>Remote Only</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Alert Frequency -->
+                        <div class="text-sm text-gray-600 mb-2">
+                            <i class="fas fa-envelope mr-2"></i>Notification frequency: 
+                            <span class="font-medium text-gray-900">{{ alert.get_frequency_display }}</span>
+                        </div>
+
+                        <!-- Last Checked -->
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-clock mr-2"></i>Created {{ alert.created_at|timesince }} ago
+                            {% if alert.last_checked %}
+                            • Last checked {{ alert.last_checked|timesince }} ago
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="ml-6 flex flex-col space-y-2">
+                        <a href="{% url 'jobs:toggle_job_alert' alert.id %}" 
+                           class="{% if alert.is_active %}bg-yellow-50 text-yellow-600 hover:bg-yellow-100{% else %}bg-green-50 text-green-600 hover:bg-green-100{% endif %} px-4 py-2 rounded-lg transition-colors text-center">
+                            <i class="fas fa-{% if alert.is_active %}pause{% else %}play{% endif %} mr-2"></i>
+                            {% if alert.is_active %}Pause{% else %}Activate{% endif %}
+                        </a>
+
+                        <a href="{% url 'jobs:edit_job_alert' alert.id %}" 
+                           class="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors text-center">
+                            <i class="fas fa-edit mr-2"></i>Edit
+                        </a>
+                        
+                        <a href="{% url 'jobs:delete_job_alert' alert.id %}" 
+                           class="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors text-center"
+                           onclick="return confirm('Delete this job alert? This cannot be undone.');">
+                            <i class="fas fa-trash mr-2"></i>Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-lg shadow-md p-12 text-center">
+            <i class="fas fa-bell fa-4x text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Job Alerts Set Up</h3>
+            <p class="text-gray-600 mb-6">Create job alerts to get notified when new opportunities matching your criteria are posted</p>
+            <a href="{% url 'jobs:create_job_alert' %}" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-plus mr-2"></i>Create Your First Alert
+            </a>
+        </div>
+    {% endif %}
+
+    <!-- Info Box -->
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fas fa-info-circle text-blue-600 text-2xl"></i>
+            </div>
+            <div class="ml-4">
+                <h4 class="text-lg font-semibold text-blue-900 mb-2">How Job Alerts Work</h4>
+                <ul class="text-sm text-blue-800 space-y-1">
+                    <li><i class="fas fa-check mr-2"></i>Set up custom alerts based on your job preferences</li>
+                    <li><i class="fas fa-check mr-2"></i>Get notified via email when matching jobs are posted</li>
+                    <li><i class="fas fa-check mr-2"></i>Choose notification frequency: instant, daily, or weekly</li>
+                    <li><i class="fas fa-check mr-2"></i>Pause or activate alerts anytime</li>
+                    <li><i class="fas fa-check mr-2"></i>Edit alert criteria to refine your job matches</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -97,7 +97,7 @@ def job_detail(request, job_id):
     can_apply = False
 
     if request.user.is_authenticated:
-        if request.user.is_job_seeker:
+        if request.user.user_type in ['job_seeker', 'regular']:
             user_applied = JobApplication.objects.filter(job_posting=job, applicant=request.user).exists()
             user_saved = JobSavedJob.objects.filter(job_posting=job, user=request.user).exists()
             can_apply = not user_applied and not job.is_deadline_passed()
@@ -188,7 +188,7 @@ def my_job_postings(request):
 @login_required
 def apply_job(request, job_id):
     """Apply for a job (job seekers only)"""
-    if not request.user.is_job_seeker:
+    if request.user.user_type not in ['job_seeker', 'regular']:
         messages.error(request, "Only job seekers can apply for jobs.")
         return redirect('jobs:job_detail', job_id=job_id)
 
@@ -231,7 +231,7 @@ def apply_job(request, job_id):
 @login_required
 def my_applications(request):
     """Display user's job applications (job seekers)"""
-    if not request.user.is_job_seeker:
+    if request.user.user_type not in ['job_seeker', 'regular']:
         return HttpResponseForbidden("You don't have permission to view this page.")
 
     applications = JobApplication.objects.filter(applicant=request.user).select_related(
@@ -334,7 +334,7 @@ def update_application_status(request, application_id):
 @login_required
 def save_job(request, job_id):
     """Save/bookmark a job (job seekers only)"""
-    if not request.user.is_job_seeker:
+    if request.user.user_type not in ['job_seeker', 'regular']:
         return JsonResponse({'error': 'Only job seekers can save jobs'}, status=403)
 
     job = get_object_or_404(JobPosting, id=job_id, is_active=True)
@@ -357,7 +357,7 @@ def save_job(request, job_id):
 @login_required
 def unsave_job(request, job_id):
     """Remove job from saved list"""
-    if not request.user.is_job_seeker:
+    if request.user.user_type not in ['job_seeker', 'regular']:
         return JsonResponse({'error': 'Only job seekers can unsave jobs'}, status=403)
 
     job = get_object_or_404(JobPosting, id=job_id)
@@ -378,15 +378,15 @@ def unsave_job(request, job_id):
 @login_required
 def saved_jobs(request):
     """Display user's saved jobs"""
-    if not request.user.is_job_seeker:
+    if request.user.user_type not in ['job_seeker', 'regular']:
         return HttpResponseForbidden("You don't have permission to view this page.")
 
-    saved_jobs = JobSavedJob.objects.filter(user=request.user).select_related(
+    saved_jobs_list = JobSavedJob.objects.filter(user=request.user).select_related(
         'job_posting'
     ).order_by('-saved_at')
 
     # Pagination
-    paginator = Paginator(saved_jobs, 12)
+    paginator = Paginator(saved_jobs_list, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -396,7 +396,7 @@ def saved_jobs(request):
 @login_required
 def job_alerts(request):
     """Display user's job alerts"""
-    if not request.user.is_job_seeker:
+    if request.user.user_type not in ['job_seeker', 'regular']:
         return HttpResponseForbidden("You don't have permission to view this page.")
 
     alerts = JobAlert.objects.filter(user=request.user).order_by('-created_at')
@@ -407,7 +407,7 @@ def job_alerts(request):
 @login_required
 def create_job_alert(request):
     """Create a new job alert"""
-    if not request.user.is_job_seeker:
+    if request.user.user_type not in ['job_seeker', 'regular']:
         return HttpResponseForbidden("You don't have permission to create job alerts.")
 
     if request.method == 'POST':
