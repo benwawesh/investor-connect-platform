@@ -52,3 +52,5 @@ watchfiles==1.1.0
 websockets==15.0.1
 wsproto==1.2.0
 zope.interface==7.2
+whitenoise==6.11.0
+
