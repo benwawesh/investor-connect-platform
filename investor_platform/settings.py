@@ -116,6 +116,12 @@ SECURE_FILE_UPLOAD_SETTINGS = {
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+# Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.CaseInsensitiveModelBackend',  # Case-insensitive username login
+    'django.contrib.auth.backends.ModelBackend',      # Default backend as fallback
+]
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -222,9 +228,9 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_REDIRECT_EXEMPT = []
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    # SECURE_SSL_REDIRECT = True
+    # SESSION_COOKIE_SECURE = True
+    # CSRF_COOKIE_SECURE = True
 
 
 

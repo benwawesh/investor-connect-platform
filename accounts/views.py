@@ -89,12 +89,12 @@ def signup_with_payment(request):
                     'registration_fee': registration_fee
                 })
 
-            if CustomUser.objects.filter(phone_number=formatted_phone).exists():
-                messages.error(request, f'Phone number already registered. Please use a different number.')
-                return render(request, 'accounts/signup_with_payment.html', {
-                    'form': form,
-                    'registration_fee': registration_fee
-                })
+            # if CustomUser.objects.filter(phone_number=formatted_phone).exists():
+            #     messages.error(request, f'Phone number already registered. Please use a different number.')
+            #     return render(request, 'accounts/signup_with_payment.html', {
+            #         'form': form,
+            #         'registration_fee': registration_fee
+            #     })
 
             # Store user data in session with FORMATTED phone number
             request.session['signup_data'] = {
